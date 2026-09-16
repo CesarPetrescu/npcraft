@@ -62,6 +62,7 @@ def prepare(s, count):
         for obj,val in [('np.owner',1),('np.mode',6),('np.next',0),('np.dig',0),('np.harvest',0),('np.status',0)]:c(f'scoreboard players set {bot} {obj} {val}')
         c(f'execute as {bot} at @s run function npcraft:agent/init')
         c(f'execute as {bot} at @s run function npcraft:bot/sync with entity @s data')
+        c(f'execute as {bot} at @s run function npcraft:survival/enable')
         c(f'data modify storage npcraft:state queue append value {{id:{ident}}}')
     # No online player is required to tick an opted-in loaded rival.
     s.expect('if entity @a',False)
