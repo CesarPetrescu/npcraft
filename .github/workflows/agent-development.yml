@@ -10,7 +10,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -35,6 +35,16 @@ jobs:
       - name: Inventory, planning, actions and 3D movement in vanilla
         if: always()
         run: python tools/agent_test.py --accept-eula --reports reports/agent
+      - name: Install graphical test environment
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb xdotool imagemagick libgl1-mesa-dri mesa-utils mesa-vulkan-drivers libglfw3 libopenal1
+      - name: Play the autonomous agent in the actual client
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GALLIUM_DRIVER: llvmpipe
+          ALSOFT_DRIVERS: 'null'
+        run: xvfb-run -a -s '-screen 0 1280x720x24 -ac +extension GLX +render -noreset' python tools/agent_playtest.py --accept-eula
       - name: Preserve evidence and generated source
         if: always()
         run: |
@@ -58,14 +68,30 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: feat/autonomous-stone-agent
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: agent-development-evidence
+          path: /tmp/npcraft-evidence
       - run: |
           test "$(git rev-parse HEAD)" = "${{ github.sha }}"
           python tools/apply_agent_stage.py
           python tools/fix_agent_runtime.py
           python tools/generate_agent.py
-          git add datapack project.json tools
+          python - <<'PY'
+          import json,pathlib,shutil
+          src=pathlib.Path('/tmp/npcraft-evidence/agent-visual')
+          result=json.loads((src/'agent-results.json').read_text())
+          assert result['success']
+          dst=pathlib.Path('docs/agent-screenshots');dst.mkdir(exist_ok=True)
+          for name in ['01-agent-management-panel.png','02-autonomous-stone-mining.png','03-stone-kit-complete.png','04-produced-items-in-player-inventory.png','05-companion-on-raised-terrace.png']:
+              p=src/'screenshots'/name
+              assert p.stat().st_size < 5000000 and p.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+              shutil.copy2(p,dst/name)
+          shutil.copy2(src/'agent-results.json',dst/'agent-results.json')
+          PY
+          git add datapack project.json tools docs/agent-screenshots
           git diff --cached --quiet && exit 0
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'feat: commit vanilla-tested agent runtime and bounded vertical navigation'
+          git commit -m 'feat: record tested autonomous runtime and genuine Minecraft screenshots'
           git push origin HEAD:feat/autonomous-stone-agent
