@@ -1,0 +1,117 @@
+{
+  "minecraft": "26.3",
+  "source_commit": "35c306f5befb7d5227e5480c4cabb1b734a34dce",
+  "run_id": "35080954846",
+  "checks": [
+    {
+      "name": "actual_client_connected",
+      "passed": true
+    },
+    {
+      "name": "recruited_via_non_operator_client",
+      "passed": true
+    },
+    {
+      "name": "no_starting_tool",
+      "passed": true
+    },
+    {
+      "name": "new_bag_starts_empty",
+      "passed": true
+    },
+    {
+      "name": "autonomy_enabled_from_client",
+      "passed": true
+    },
+    {
+      "name": "wooden_pickaxe_crafted_without_gift",
+      "passed": true
+    },
+    {
+      "name": "crafted_stone_pickaxe",
+      "passed": true
+    },
+    {
+      "name": "crafted_stone_sword",
+      "passed": true
+    },
+    {
+      "name": "crafted_stone_axe",
+      "passed": true
+    },
+    {
+      "name": "crafted_furnace",
+      "passed": true
+    },
+    {
+      "name": "real_workbench_placed",
+      "passed": true
+    },
+    {
+      "name": "nineteen_world_blocks_accounted",
+      "passed": true
+    },
+    {
+      "name": "outside_plot_log_preserved",
+      "passed": true
+    },
+    {
+      "name": "lost_sword_replaced_without_new_order",
+      "passed": true
+    },
+    {
+      "name": "stop_from_client",
+      "passed": true
+    },
+    {
+      "name": "backpack_drained_without_duplicate",
+      "passed": true
+    },
+    {
+      "name": "returned_stone_pickaxe",
+      "passed": true
+    },
+    {
+      "name": "returned_stone_sword",
+      "passed": true
+    },
+    {
+      "name": "returned_stone_axe",
+      "passed": true
+    },
+    {
+      "name": "returned_furnace",
+      "passed": true
+    },
+    {
+      "name": "new_backpack_transfer_removes_source",
+      "passed": true
+    },
+    {
+      "name": "backpack_components_preserved",
+      "passed": true
+    },
+    {
+      "name": "follow_climbed_two_one_block_steps",
+      "passed": true
+    },
+    {
+      "name": "follow_descended_safely",
+      "passed": true
+    },
+    {
+      "name": "backpack_survives_reload",
+      "passed": true
+    }
+  ],
+  "success": true,
+  "method": "unmodified vanilla client input; independent loopback RCON assertions",
+  "completed_backpack": "Marker has the following entity data: [{item: {count: 1, id: \"minecraft:oak_planks\"}, max: 64}, {item: {components: {\"minecraft:damage\": 13}, count: 1, id: \"minecraft:stone_pickaxe\"}, max: 1}, {item: {components: {\"minecraft:damage\": 3}, count: 1, id: \"minecraft:wooden_pickaxe\"}, max: 1}, {item: {count: 1, id: \"minecraft:stone_sword\"}, max: 1}, {item: {count: 1, id: \"minecraft:stick\"}, max: 64}, {item: {count: 1, id: \"minecraft:stone_axe\"}, max: 1}, {item: {count: 1, id: \"minecraft:furnace\"}, max: 64}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]",
+  "screenshots": [
+    "01-agent-management-panel.png",
+    "02-autonomous-stone-mining.png",
+    "03-stone-kit-complete.png",
+    "04-produced-items-in-player-inventory.png",
+    "05-companion-on-raised-terrace.png"
+  ]
+}

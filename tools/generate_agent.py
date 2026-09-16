@@ -37,7 +37,13 @@ def resources() -> dict[str, str]:
         data modify entity @s data.agent set value {schema:1,bag:[],scan:0,scanned:0,blocked:[],forget_at:0,failures:0,goal:"stone_kit",task:"idle",crafted:0,mined:0}
     ''' + '\n'.join('data modify entity @s data.agent.bag append value {}' for _ in range(SLOTS)))
     fn('inventory/begin', '''
+        scoreboard players set #iv_ok np.tmp 0
+        scoreboard players set #iv_ready np.tmp 0
         function npcraft:agent/init
+        execute unless data entity @s data.agent{schema:1} run return 0
+        execute store result score #iv_length np.tmp run data get entity @s data.agent.bag
+        execute unless score #iv_length np.tmp matches 36 run return 0
+        scoreboard players set #iv_ready np.tmp 1
         data modify storage npcraft:inventory bag set from entity @s data.agent.bag
         scoreboard players set #iv_ok np.tmp 0
     ''')
@@ -53,6 +59,7 @@ def resources() -> dict[str, str]:
     ''')
     fn('inventory/add_staged', '''
         scoreboard players set #iv_ok np.tmp 0
+        execute unless score #iv_ready np.tmp matches 1 run return 0
         $data modify storage npcraft:inventory incoming set value $(stack)
         $scoreboard players set #iv_max np.tmp $(max)
         execute unless score #iv_max np.tmp matches 1..99 run return 0
@@ -115,6 +122,7 @@ def resources() -> dict[str, str]:
         for i in range(SLOTS)))
     fn('inventory/take_staged', '''
         scoreboard players set #iv_ok np.tmp 0
+        execute unless score #iv_ready np.tmp matches 1 run return 0
         $scoreboard players set #iv_remaining np.tmp $(count)
         execute unless score #iv_remaining np.tmp matches 1..3564 run return 0
         $data modify storage npcraft:inventory take set value {kind:"$(kind)"}
@@ -180,11 +188,22 @@ def resources() -> dict[str, str]:
         data remove entity @s data.agent.hand
         scoreboard players set #tool_slot np.tmp -1
     ''' + '\n'.join(
-        f'execute if data entity @s data.agent.bag[{i}].item{{id:"minecraft:{tool}"}} run scoreboard players set #tool_slot np.tmp {i}'
+        f'execute if data entity @s data.agent.bag[{i}].item{{id:"minecraft:{tool}"}} run function npcraft:inventory/pick_candidate {{i:{i},limit:{59 if tool == "wooden_pickaxe" else 131}}}'
         for tool in ('wooden_pickaxe', 'stone_pickaxe') for i in range(SLOTS)) + '''
         execute unless score #tool_slot np.tmp matches 0..35 run return 0
         execute store result storage npcraft:inventory tool.i int 1 run scoreboard players get #tool_slot np.tmp
         function npcraft:inventory/select_slot with storage npcraft:inventory tool
+    ''')
+    fn('inventory/pick_candidate', '''
+        $execute if data entity @s data.agent.bag[$(i)].item.components."minecraft:unbreakable" run return 0
+        $execute if data entity @s data.agent.bag[$(i)].item.components."minecraft:enchantments" run return 0
+        $execute if data entity @s data.agent.bag[$(i)].item.components."minecraft:max_damage" run return 0
+        scoreboard players set #pick_damage np.tmp 0
+        $execute store result score #pick_damage np.tmp run data get entity @s data.agent.bag[$(i)].item.components."minecraft:damage"
+        $scoreboard players set #pick_limit np.tmp $(limit)
+        execute if score #pick_damage np.tmp >= #pick_limit np.tmp run return 0
+        execute if score #pick_damage np.tmp matches ..-1 run return 0
+        $scoreboard players set #tool_slot np.tmp $(i)
     ''')
     fn('inventory/select_slot', '''
         $data modify entity @s data.agent.hand set from entity @s data.agent.bag[$(i)].item
@@ -424,6 +443,12 @@ def resources() -> dict[str, str]:
         built.add(key)
         lines = [f'function npcraft:inventory/count {{kind:"{kind}"}}',
                  f'execute if score #iv_have np.tmp matches {count}.. run return 1']
+        if kind in ('wooden_pickaxe', 'stone_pickaxe'):
+            lines = ['function npcraft:inventory/select_pick']
+            if kind == 'wooden_pickaxe':
+                lines.append('execute if score #tool_slot np.tmp matches 0..35 run return 1')
+            else:
+                lines.append('execute if data entity @s data.agent.hand{id:"minecraft:stone_pickaxe"} run return 1')
         if kind in ('oak_log', 'cobblestone'):
             if kind == 'cobblestone':
                 lines += ['function npcraft:inventory/select_pick',
@@ -474,8 +499,8 @@ def resources() -> dict[str, str]:
     fn('planner/choose', '''
         # Utility order: essential mining capability, weapon, efficient timber tool, furnace.
         # Re-evaluate actual inventory every visit; no persistent fake technology stage.
-        function npcraft:inventory/count {kind:"stone_pickaxe"}
-        execute unless score #iv_have np.tmp matches 1.. run return run function npcraft:planner/need/stone_pickaxe_1
+        function npcraft:inventory/select_pick
+        execute unless data entity @s data.agent.hand{id:"minecraft:stone_pickaxe"} run return run function npcraft:planner/need/stone_pickaxe_1
         function npcraft:inventory/count {kind:"stone_sword"}
         execute unless score #iv_have np.tmp matches 1.. run return run function npcraft:planner/need/stone_sword_1
         function npcraft:inventory/count {kind:"stone_axe"}

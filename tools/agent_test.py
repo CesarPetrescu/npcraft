@@ -291,5 +291,6 @@ def test_backpack_restart(s):
 
 TESTS = [value for key,value in list(globals().items()) if key.startswith('test_') and callable(value)]
 if __name__ == '__main__':
-    base.TESTS = TESTS
+    from tools.agent_edge_cases import TESTS as edge_cases
+    base.TESTS = TESTS + edge_cases
     raise SystemExit(base.main())
