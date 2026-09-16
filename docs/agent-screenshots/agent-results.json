@@ -1,7 +1,7 @@
 {
   "minecraft": "26.3",
-  "source_commit": "35c306f5befb7d5227e5480c4cabb1b734a34dce",
-  "run_id": "35080954846",
+  "source_commit": "cc2e390b2cac9f3508fe59e5494724eba5d03965",
+  "run_id": "35081778460",
   "checks": [
     {
       "name": "actual_client_connected",
