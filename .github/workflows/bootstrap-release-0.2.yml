@@ -1,0 +1,88 @@
+name: Publish NPCraft 0.2 prerelease
+
+on:
+  push:
+    branches: [release/bootstrap-0.2.0-alpha.1]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.repository == 'CesarPetrescu/npcraft'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Validate and build the exact main release payload
+        run: |
+          python tools/validate.py
+          python -m unittest discover -s tests -v
+          python tools/build.py --expect-tag v0.2.0-alpha.1
+          test -f dist/npcraft-0.2.0-alpha.1-mc26.3.zip
+          test -f dist/npcraft-0.2.0-alpha.1-mc26.3.zip.sha256
+      - name: Write release notes
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## NPCraft 0.2.0-alpha.1
+
+          First downloadable NPCraft prerelease for **Minecraft Java Edition 26.3**.
+
+          ### Install
+
+          1. Download **`npcraft-0.2.0-alpha.1-mc26.3.zip`** below. Do **not** download GitHub's automatic Source code ZIP.
+          2. Put the ZIP directly in:
+             ```text
+             <your world>/datapacks/
+             ```
+          3. Start/open the world and run:
+             ```mcfunction
+             /reload
+             /datapack list enabled
+             /function npcraft:admin/grant
+             /trigger npcraft set 1
+             ```
+          4. Press **G** or use `/trigger npcraft set 1` for the companion panel.
+          5. For the 0.2 autonomous-agent panel use:
+             ```mcfunction
+             /trigger npcraft set 20
+             ```
+
+          ### What is in 0.2
+
+          - persistent mannequin companions and ownership controls
+          - bounded navigation with full-block ascent/descent
+          - timber work and barrel output
+          - 36-slot authoritative backpack
+          - validated mining/crafting actions
+          - autonomous prerequisite chain through a stone pickaxe
+          - real Minecraft server and graphical-client regression coverage
+
+          ### Important
+
+          This is an **alpha**. Use a backed-up/test world. It is not yet a complete survival/PvP player. The newer 0.3 work is still under development and is intentionally not included in this release.
+
+          The attached `.sha256` file can be used to verify the datapack ZIP.
+          EOF
+      - name: Create GitHub prerelease and attach the installable ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_SHA: b5fe045e9f7189ac8ca15f037cedbd12b38bfe85
+        run: |
+          if gh release view v0.2.0-alpha.1 >/dev/null 2>&1; then
+            echo 'Release already exists; refusing to replace it.'
+            exit 1
+          fi
+          gh release create v0.2.0-alpha.1 \
+            dist/npcraft-0.2.0-alpha.1-mc26.3.zip \
+            dist/npcraft-0.2.0-alpha.1-mc26.3.zip.sha256 \
+            --target "$TARGET_SHA" \
+            --prerelease \
+            --title 'NPCraft 0.2.0-alpha.1' \
+            --notes-file release-notes.md
