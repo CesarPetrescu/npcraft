@@ -142,7 +142,7 @@ class Server:
             try:
                 self.rcon = Rcon(self.port, self.password)
                 response = self.rcon.request("data get storage npcraft:meta version")
-                if "0.1.0-alpha.1" in response:
+                if json.loads((ROOT / "project.json").read_text())["version"] in response:
                     self.assert_clean_logs()
                     return
                 self.rcon.close()
@@ -498,6 +498,9 @@ TESTS = [test_native_body, test_reload, test_wall_detour, test_far_goal, test_ga
          test_return_items, test_unauthorized_and_offline, test_scheduler, test_negative_navigation,
          test_dismiss_conserves_items, test_persistence]
 
+
+from tools.agent_tests import AGENT_TESTS
+TESTS.extend(AGENT_TESTS)
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)

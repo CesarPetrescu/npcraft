@@ -1,3 +1,5 @@
+function npcraft:inventory/drop
+execute if data entity @s data.inventory.slots[].item run return 0
 function npcraft:commands/drop_tool
 function npcraft:commands/drop_cargo
 execute if data entity @s data.tool run return 0
