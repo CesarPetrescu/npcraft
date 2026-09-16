@@ -1,0 +1,36 @@
+name: Apply verified NPCraft 0.3 source
+on:
+  push:
+    branches: [feat/iron-survival-rival]
+    paths: ['.bootstrap/**', '.github/workflows/v03-bootstrap.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'CesarPetrescu/npcraft' && github.ref == 'refs/heads/feat/iron-survival-rival'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Verify original source patch and apply
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, os
+          from pathlib import Path
+          parts = [Path(f'.bootstrap/v03-{i}.b64').read_text().strip() for i in range(4)]
+          patch = gzip.decompress(base64.b64decode(''.join(parts), validate=True))
+          assert hashlib.sha256(patch).hexdigest() == '1f0ea14cb797f560467069e3444af6fbb69cbb3c929470d5da42eba4e99cc5fb'
+          assert b'diff --git a/.github/' not in patch
+          Path(os.environ['RUNNER_TEMP'], 'source.patch').write_bytes(patch)
+          PY
+          git apply --index --whitespace=error "$RUNNER_TEMP/source.patch"
+          python tools/validate.py
+          python -m unittest discover -s tests -q
+      - name: Commit readable source only
+        run: |
+          git rm -r .bootstrap
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: add self-built iron progression, native mortality, cached routes and consent-bound rival'
+          git push origin HEAD:refs/heads/feat/iron-survival-rival
