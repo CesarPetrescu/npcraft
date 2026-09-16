@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Verify and apply the locally prepared Git patch
+      - name: Verify and apply source only
         shell: bash
         run: |
           python - <<'PY'
@@ -23,12 +23,12 @@ jobs:
           assert hashlib.sha256(patch).hexdigest() == '8a0fd8cff83a18f45f7db7dbebfea2caae95d386b05a5cf73424bf5240b11176'
           Path(os.environ['RUNNER_TEMP'], 'source.patch').write_bytes(patch)
           PY
-          git apply --index --whitespace=error "$RUNNER_TEMP/source.patch"
+          git apply --index --exclude='.github/workflows/*' --whitespace=error "$RUNNER_TEMP/source.patch"
           python tools/validate.py
           python -m unittest discover -s tests -q
-      - name: Commit readable source and remove the one-time transport
+      - name: Commit readable source and remove transport parts
         run: |
-          git rm -r .bootstrap .github/workflows/agent-bootstrap.yml
+          git rm -r .bootstrap
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'feat: add transactional backpack, goal-driven crafting and safe vertical navigation'
