@@ -1,0 +1,126 @@
+{
+  "minecraft": "26.3",
+  "source_commit": "6b9097eb195fc3090be302f383ec8356d115bc79",
+  "run_id": "35074818023",
+  "method": "unmodified vanilla GUI + xdotool; loopback RCON assertions",
+  "checks": [
+    {
+      "name": "real_client_joined",
+      "passed": true
+    },
+    {
+      "name": "native_menu_non_operator_recruit",
+      "passed": true
+    },
+    {
+      "name": "enchanted_axe_refused",
+      "passed": true
+    },
+    {
+      "name": "rejected_axe_retained_by_player",
+      "passed": true
+    },
+    {
+      "name": "native_menu_axe_transfer",
+      "passed": true
+    },
+    {
+      "name": "existing_axe_damage_preserved",
+      "passed": true
+    },
+    {
+      "name": "axe_removed_from_player",
+      "passed": true
+    },
+    {
+      "name": "native_menu_follow",
+      "passed": true
+    },
+    {
+      "name": "native_menu_stay",
+      "passed": true
+    },
+    {
+      "name": "plot_assigned",
+      "passed": true
+    },
+    {
+      "name": "barrel_assigned",
+      "passed": true
+    },
+    {
+      "name": "job_started_through_client",
+      "passed": true
+    },
+    {
+      "name": "autonomous_harvest_and_deposit",
+      "passed": true
+    },
+    {
+      "name": "building_outside_plot_untouched",
+      "passed": true
+    },
+    {
+      "name": "all_16_logs_accounted_for",
+      "passed": true
+    },
+    {
+      "name": "axe_wear_equals_16_harvests",
+      "passed": true
+    },
+    {
+      "name": "cargo_cleared_after_deposit",
+      "passed": true
+    },
+    {
+      "name": "follow_around_wall",
+      "passed": true
+    },
+    {
+      "name": "navigation_preserved_wall",
+      "passed": true
+    },
+    {
+      "name": "stay_through_client",
+      "passed": true
+    },
+    {
+      "name": "two_real_clients_connected",
+      "passed": true
+    },
+    {
+      "name": "other_player_cannot_select_companion",
+      "passed": true
+    },
+    {
+      "name": "forged_selection_cannot_control_companion",
+      "passed": true
+    },
+    {
+      "name": "other_player_cannot_dismiss_companion",
+      "passed": true
+    },
+    {
+      "name": "second_owner_recruits_separate_companion",
+      "passed": true
+    },
+    {
+      "name": "first_owner_record_unchanged",
+      "passed": true
+    },
+    {
+      "name": "owner_and_companion_survive_reload",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "01-companion-in-world.png",
+    "02-native-management-panel.png",
+    "03-timber-worker.png",
+    "04-harvested-plot.png",
+    "05-barrel-inventory.png",
+    "06-follow-obstacle-course.png",
+    "07-two-owner-companions.png"
+  ],
+  "success": true
+}
