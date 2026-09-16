@@ -16,3 +16,4 @@ execute unless score #found np.tmp matches 1 unless entity @e[tag=npcraft.goal,d
 execute if score #found np.tmp matches 1 run function npcraft:nav/move
 execute unless score #found np.tmp matches 1 run function npcraft:nav/blocked
 function npcraft:nav/cleanup
+function npcraft:admin/diagnostics
