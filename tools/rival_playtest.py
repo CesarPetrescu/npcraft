@@ -56,6 +56,12 @@ def run(args):
             match=re.search(r'data:\s*(-?\d+(?:\.\d+)?)',response)
             if not match:raise AssertionError(response)
             return float(match.group(1))
+        def capture(name):
+            # Console assertions alone can pass after a client has died. Never
+            # certify a planned world/menu frame from a dead player session.
+            if value(PLAYER,'Health') <= 0:
+                raise AssertionError('Client died before screenshot '+name)
+            client.shot(name)
         def photograph(name):
             target=[value(BOT,f'Pos[{i}]') for i in range(3)]
             # Face the open center lane, not a foreground resource pillar.
@@ -63,11 +69,11 @@ def run(args):
             dx,dy,dz=target[0]-camera[0],target[1]+1.2-(camera[1]+1.62),target[2]-camera[2]
             yaw=math.degrees(math.atan2(-dx,dz));pitch=-math.degrees(math.atan2(dy,math.hypot(dx,dz)))
             server.command(f'tp {PLAYER} {camera[0]} {camera[1]} {camera[2]} {yaw} {pitch}')
-            client.key('F1');client.shot(name);client.key('F1')
+            client.key('F1');capture(name);client.key('F1')
         try:
             server.start();c=server.command
             c('forceload add -32 -32 32 32');time.sleep(3)
-            c('fill -12 63 -12 22 63 12 minecraft:grass_block')
+            c('fill -12 63 -12 32 63 12 minecraft:grass_block')
             c('fill -12 64 -12 22 71 12 minecraft:air')
             c('setworldspawn 0 64 6');c('time set noon');c('weather clear')
             c('gamerule minecraft:advance_time false');c('gamerule minecraft:advance_weather false')
@@ -93,7 +99,7 @@ def run(args):
             check('empty_backpack_start',f'if data entity {BOT} data.inventory.slots[].item',False)
             check('no_prebuilt_workbench_record',f'if data entity {BOT} data.agent.bench',False)
             c(f'tp {PLAYER} 7.5 64 7.5 135 5')
-            client.chat('/trigger npcraft set 30');client.shot('01-iron-and-rival-controls');client.key('Escape')
+            client.chat('/trigger npcraft set 30');capture('01-iron-and-rival-controls');client.key('Escape')
             client.chat('/trigger npcraft set 31')
             check('iron_goal_requested_from_client',f'if score {BOT} np.mode matches 5')
             wait('self_sufficient_iron_pickaxe',f'if data entity {BOT} data.agent{{reason:"iron_pickaxe_obtained"}}',180)
@@ -107,15 +113,15 @@ def run(args):
             photograph('02-self-built-workstations-and-iron-pick')
             client.chat('/trigger npcraft set 33')
             check('plot_preview_preserves_completed_goal',f'if data entity {BOT} data.agent{{reason:"iron_pickaxe_obtained"}}')
-            client.chat('/trigger npcraft set 34');client.shot('07-read-only-task-snapshot');client.key('Escape')
+            client.chat('/trigger npcraft set 34');capture('07-read-only-task-snapshot');client.key('Escape')
             check('status_view_preserves_earned_tool',f'if data entity {BOT} data.inventory.slots[].item{{id:"minecraft:iron_pickaxe",count:1}}')
-            client.chat('/trigger npcraft set 32');client.shot('03-authoritative-backpack-view');client.key('Escape')
+            client.chat('/trigger npcraft set 32');capture('03-authoritative-backpack-view');client.key('Escape')
             # Food is a disclosed separate survival-test supply, not a progression resource grant.
             c(f'item replace entity {PLAYER} weapon.mainhand with minecraft:bread 4')
             client.chat('/trigger npcraft set 21')
             check('food_transferred_from_client',f'if data entity {BOT} data.inventory.slots[].item{{id:"minecraft:bread",count:4}}')
             c(f'gamemode survival {PLAYER}');c('difficulty normal')
-            client.chat('/trigger npcraft set 40');client.shot('04-explicit-duel-consent');client.key('Escape')
+            client.chat('/trigger npcraft set 40');capture('04-explicit-duel-consent');client.key('Escape')
             client.chat('/trigger npcraft set 41')
             check('duel_opted_in',f'if data entity {BOT} data.rival{{enabled:1b}}')
             check('body_is_mortal',f'if data entity {BODY} {{Invulnerable:0b}}')
@@ -137,13 +143,13 @@ def run(args):
             result['observed_pvp_damage']={'before':before,'after':after}
             # Capture the actual first hit without taking extra hits while framing.
             c('tick freeze')
-            try:client.shot('08-first-legitimate-melee-hit')
+            try:capture('08-first-legitimate-melee-hit')
             finally:c('tick unfreeze')
             check('weapon_wears_on_real_hit',f'if data entity {BOT} data.inventory.slots[].item{{id:"minecraft:iron_sword",components:{{"minecraft:damage":1}}}}')
             # Stop from outside both the action range and arena; this must not require proximity.
             c(f'tp {PLAYER} 25.5 64 0.5')
             client.chat('/trigger npcraft set 42')
-            check('remote_consent_revocation',f'if data entity {BOT} data.rival{{enabled:0b}}')
+            check('remote_consent_revocation',f'if data entity {BOT} data.rival{{enabled:0b}} if entity @a[name=NPCraftQA,nbt=!{{Health:0.0f}}]')
             c(f'gamemode creative {PLAYER}');c(f'execute as {PLAYER} run effect give @s minecraft:instant_health 1 5')
             c('function npcraft:admin/pause')
             # Re-enable while hidden behind an opaque wall, then exercise exact last-seen memory.
