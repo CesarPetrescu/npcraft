@@ -20,3 +20,8 @@ class ReliabilityContracts(unittest.TestCase):
         text=(ROOT/'.github/workflows/ci.yml').read_text()
         self.assertIn('tools/reliability_tests.py',text)
         self.assertIn('needs: [quality, vanilla, visual, soak]',text)
+    def test_status_dialog_does_not_send_unresolved_nbt(self):
+        text=(ROOT/'datapack/data/npcraft/function/ui/status.mcfunction').read_text()
+        self.assertNotIn('nbt:',text)
+        self.assertIn('screen.body[0].contents[1].text set from entity @s data.agent.goal',text)
+        self.assertIn('function npcraft:ui/status_vitals',text)

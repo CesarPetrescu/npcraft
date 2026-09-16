@@ -85,6 +85,23 @@ def test_respawn_never_duplicates_marked_loot(s):
     assert count(s,'minecraft:diamond')==9
 
 
+def test_status_snapshot_resolves_values_server_side(s):
+    s.command(AS+'data modify entity @s data.agent set value {goal:"iron_pickaxe",intent:"mine_iron",state:"running",reason:"gathering"}')
+    s.command(AS+'data modify entity @s data.survival set value {enabled:1b,dead:0b,health:17.0f,food:9}')
+    s.command(AS+'data modify entity @s data.rival set value {activity:"equipping"}')
+    s.command(AS+'function npcraft:ui/status')
+    for condition in (
+        'if data storage npcraft:ui screen.body[0].contents[1]{text:"iron_pickaxe"}',
+        'if data storage npcraft:ui screen.body[1].contents[1]{text:"mine_iron"}',
+        'if data storage npcraft:ui screen.body[1].contents[3]{text:"running"}',
+        'if data storage npcraft:ui screen.body[2].contents[1]{text:"gathering"}',
+        'if data storage npcraft:ui screen.body[3].contents[1]{text:"17"}',
+        'if data storage npcraft:ui screen.body[3].contents[3]{text:"9"}',
+        'if data storage npcraft:ui screen.body[4].contents[1]{text:"equipping"}',
+    ): s.expect(condition)
+    s.expect(f'if data entity {BOT} data.agent{{goal:"iron_pickaxe",intent:"mine_iron",state:"running"}}')
+
+
 # Fixture-only block mutation is installed into a disposable secondary datapack.
 def install_test_helper(server):
     import json
