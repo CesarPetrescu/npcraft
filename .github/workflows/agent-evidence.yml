@@ -1,0 +1,52 @@
+name: Record reviewed agent playtest evidence
+on:
+  push:
+    branches: [feat/agent-foundations]
+    paths: ['.github/workflows/agent-evidence.yml']
+permissions:
+  contents: write
+  actions: read
+jobs:
+  record:
+    if: github.repository == 'CesarPetrescu/npcraft' && github.ref == 'refs/heads/feat/agent-foundations'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/agent-foundations
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: minecraft-client-playtest
+          run-id: 35103672464
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Copy only the bounded successful report and PNG captures
+        run: |
+          python - <<'PY'
+          import json, struct
+          from pathlib import Path
+          source = Path('evidence/agent-visual')
+          report = json.loads((source / 'agent-results.json').read_text())
+          assert report['success'] is True and str(report['run_id']) == '35103672464'
+          assert len(report['checks']) == 21 and all(c['passed'] is True for c in report['checks'])
+          names = ['01-agent-controls.png', '02-empty-handed-goal-fixture.png', '03-crafted-stone-pickaxe.png', '04-vertical-follow-platform.png']
+          assert report['screenshots'] == names
+          destination = Path('docs/agent-screenshots')
+          destination.mkdir(parents=True, exist_ok=True)
+          for name in names:
+              path = source / 'screenshots' / name
+              assert not path.is_symlink()
+              data = path.read_bytes()
+              assert data[:8] == b'\x89PNG\r\n\x1a\n' and len(data) <= 4000000
+              assert struct.unpack('>II', data[16:24]) == (1280, 720)
+              (destination / name).write_bytes(data)
+          (destination / 'agent-results.json').write_text(json.dumps(report, indent=2) + '\n')
+          PY
+      - name: Commit without rewriting history
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/agent-screenshots
+          git commit -m 'docs: record genuine agent progression and vertical navigation captures'
+          git push origin HEAD:refs/heads/feat/agent-foundations
