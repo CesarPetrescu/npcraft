@@ -1,56 +1,60 @@
-# Operations
+# Operating NPCraft 0.3
 
-## Backups and upgrades
+## Backups and upgrade
 
-Back up the **whole world**, including regions, entities, scoreboards and command
-storage, with a clean shutdown. Do not mix different snapshots. Synchronous
-inventory/action commits are not crash-proof database transactions across saves.
-Use a separate test world before installation or an engine/datapack upgrade.
+Back up the whole world while stopped: region/entities, scores, command storage,
+player data and datapacks. Remove older NPCraft versions before installing this
+one. Keep the exact tested Java version. Lazy additions preserve schema-1 IDs,
+legacy timber tool/cargo and newer backpack records; do not delete old fields.
+Never mix region files and command storage from inconsistent snapshots.
 
-0.2 adds `data.inventory` and `data.agent` lazily to existing controllers. It does
-not reset schema-1 owner UUIDs, IDs, legacy timber tools/cargo or allocation counters.
-A `/reload` retains state and the operator pause flag. Do not downgrade once new
-backpack items exist: an older pack cannot manage them. Do not merely change
-pack.mcmeta to suppress compatibility warnings on another game version.
+## Approval, pause, consent
 
-## Pausing and diagnosis
+Only approved owners issue ordinary companion commands. `admin/revoke` updates the
+persistent ACL; `admin/pause` stops autonomous work/combat. Neither means existing
+mortal bodies become immune to outside damage. Runtime death accounting may still
+record and drop legitimate inventory while work is paused. Safe respawn waits
+until the server is resumed. Action 42 revokes rival consent from anywhere, even
+when paused, outside the Overworld or no longer approved. Use it before experimenting
+with a new arena. Rival consent is separate from administrative permission.
 
-`npcraft:admin/pause` blocks mutations and work while retaining items/records.
-`npcraft:admin/resume` re-enables it. Run `npcraft:admin/revoke` as a player to remove
-approval. Autonomous work requires the approved owner within 64 blocks in the
-Overworld. Missing/unloaded owners or controllers are paused, not reclaimed.
+Rivals work only in loaded chunks. No automatic force-loading/offline simulation.
+A missing loaded body is treated conservatively as death for mortal controllers,
+never an excuse to grant replacement equipment. Do not edit/delete controller NBT,
+extract the displayed mannequin tool, or run blanket entity cleanup commands.
 
-Use trigger 25 for the agent's intent, state, reason and backpack. Trigger 13 shows
-legacy job diagnostics. Trigger 11 cancels. Status/panel reads do not cancel a cut;
-unknown actions have no side effects. Trigger 22 stops work and returns backpack
-contents as public drops. Other players can collect those drops.
+## Items, stations and death
 
-For `assign_work_plot`/`assign_real_workbench`, set the missing target. For blocked
-routes, provide a supported full-block approach with two clear body cells. One-block
-up and at most two-block down transitions are supported; slabs/stair shapes, doors,
-water and unsupported hazards can cause a safe stop. Temporary failed-target memory
-expires; absent resources are not replaced with free items.
+Backpack and legacy timber inventory are authoritative; display equipment is not.
+Returns and deaths create public drops, collectible by other players. The reserved
+`minecraft:custom_data.npcraft_visual` flag is for disposable visual copies; do not
+use it on user-generated real items. Death does not reclaim furnace contents or
+remove stations. Check these blocks before uninstalling.
 
-## Inventory ownership
+The corpse timer is primed while alive to avoid the targeted mannequin's invalid
+DYING-pose serialization window. Tests check live health, actual damage, death and
+restart. This is a compatibility workaround, not a claim of general player physics.
 
-The marker's backpack and legacy `data.tool`/`data.cargo` are authoritative. The
-mannequin's displayed item is a cosmetic copy. Never extract it with another plugin
-or administrative command and treat it as inventory. Bodies are deliberately
-invulnerable; survival combat/death drops are not supported.
+Food is supplied cooked beef/bread/apples, not autonomous farming. Respawn requires
+safe loaded home cells and waits otherwise. Recovery seeks only real marked drops
+for a limited time. Missing/stolen/despawned items are not reconstructed. Death or
+world unloading can leave a furnace burning its remaining fuel normally.
 
-Do not blanket-kill controller markers: this destroys their items and leaves saved
-allocation metadata. A missing controller may simply be unloaded, so automatic
-reclamation is unsafe. Restore the full backup after accidental deletion.
+## Blocked work
 
-Approved users are trusted to designate permitted work plots/containers/benches.
-Vanilla commands do not automatically integrate arbitrary land-claim plugins.
-Ordinary users cannot control another owner's NPC through the public trigger API;
-operators can always tamper directly with scores/NBT and are outside that boundary.
+Use task/health view and work-bound preview. Every supported block inside the plot
+is eligible, including player-placed construction. Provide clear full-block lanes,
+reachable resources, spare coal and legal station space. Unsupported terrain,
+replaced/foreign furnaces, full inventories and missing ingredients must stop safely.
+It will not dig a rescue tunnel, silently teleport through walls, or bypass claims.
+
+The no-gravity presentation is not certified knockback/fall/swim simulation. A safe
+stop on natural terrain is expected when that terrain needs an unsupported action.
 
 ## Uninstall
 
-Load every companion's area, select and dismiss it, and collect all backpack plus
-legacy tool/cargo drops. Confirm allocation counts are zero before removing the
-pack. Merely deleting the ZIP leaves saved entities/state. Empty objectives/storage
-may remain; retaining them is safer than deleting potentially unloaded records.
-For unknown allocations, restoring the pre-install full-world backup is safest.
+Load each companion's area; end rival mode; dismiss it; collect returned items;
+empty/reclaim stations. Confirm no remaining loaded or unloaded allocations before
+removing the pack. Deleting the ZIP alone leaves saved entities. Restore a complete
+pre-install backup if allocations are unknown. There is no global destructive
+cleanup command: unloaded records cannot safely be assumed deleted.

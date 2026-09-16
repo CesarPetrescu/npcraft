@@ -66,6 +66,20 @@
         "type": "run_command",
         "command": "trigger npcraft set 42"
       }
+    },
+    {
+      "label": "Preview work bounds",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 33"
+      }
+    },
+    {
+      "label": "Live task / health",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 34"
+      }
     }
   ],
   "exit_action": {

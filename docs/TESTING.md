@@ -1,65 +1,55 @@
-# Testing and evidence
+# Verification and evidence
 
-## Layers
+## Executable layers
 
-1. `python tools/validate.py`: resource/metadata/reference checks and selected safety
-   policies. This is **not** Minecraft's command parser.
-2. `python -m unittest discover -s tests -v`: offline packaging, negative validation,
-   installer, transport and contract tests. Test count is printed by the runner.
-3. `python tools/server_test.py --accept-eula`: exact official vanilla Java 26.3,
-   isolated loopback RCON, real functions/entities/items and world state. Original
-   regression cases plus `tools/agent_tests.py`, including full process restarts.
-4. `tools/client_playtest.py --accept-eula` and `tools/agent_playtest.py --accept-eula`:
-   unmodified graphical clients under Xvfb/Mesa, keyboard/mouse player requests,
-   independent RCON assertions, genuine screenshots and client/server logs.
+| Layer | Command / implementation |
+|---|---|
+| Structure | `python tools/validate.py`: metadata, references and selected command policies; NOT Minecraft's parser. |
+| Offline tests | `python -m unittest discover -s tests -v`: packaging, negative checks, installer, transport and source invariants. |
+| Native main suite | `python tools/server_test.py --accept-eula`: exact official vanilla server, actual functions/world/entities, including process restarts. |
+| Adversarial | `tools/v03_adversarial_tests.py --accept-eula --reports reports/adversarial`: shared resources, station/capacity rejection, migration and persistence. |
+| Lifecycle | `tools/reliability_tests.py --accept-eula --reports reports/reliability`: real ACL writer types, live mortal bodies, changed cached routes, readiness, dead-food refusal and loot recovery/restart. |
+| Graphical | `tools/client_playtest.py`, `tools/agent_playtest.py`, `tools/rival_playtest.py`: unmodified clients, real keyboard/mouse requests, independent RCON assertions and PNG captures. |
+| Multi-agent | `tools/soak_test.py --accept-eula --agents 1,4,8,16 --ticks 6000`: production runtime/scheduler in declared loaded fixtures, no online player or per-action driver. |
 
-Review Minecraft's EULA before acceptance. The harness never opens a real user
-save. The official version's downloads are hash-verified; no latest-version fallback.
-No binaries, accounts, server properties or worlds are committed or distributed.
+Review the Minecraft EULA before explicit acceptance. Tests create isolated
+loopback-only worlds and verify official downloads. They never use an existing
+user world. Test-only chunk loading and fixture commands are not distributed in
+the production datapack. No binaries, credentials or server properties are uploaded.
 
-## Agent assertions
+## What counts as evidence
 
-Exact-component stack merging and unlike-component separation; stack caps; partial
-staging rollback when full; failed recipes preserving ingredients; mixed plank
-recipes; absent/destroyed workbench; mining tool/reach/plot checks; durability and
-pick exhaustion; full-backpack block conservation; one-block ascent; safe two-block
-and refused three-block drops; overhead and changed-landing validation; failed-target
-memory; owner absence; read-only/unknown actions; additive initialization; backpack
-persistence and the complete empty-inventory stone-pickaxe chain.
+Only completed runs establish pass/fail. A test definition or a source-string check
+is not a Minecraft playtest. Report exact source SHA and per-suite assertions;
+counts are not a percentage of all game behavior. Historical screenshots retain
+their version provenance. The rival GUI scenario begins with declared resource
+blocks, no granted stations/tools/ingots. Food is supplied separately for survival.
+The actual client provides requests; RCON builds the fixture and verifies results.
 
-The new GUI scenario verifies exact before/after item records rather than assuming
-one text-component serialization. Player gives/returns and goals originate through
-the real client. The workbench/resources and camera are disclosed fixture setup,
-not proof of natural exploration. Source/test-specific details appear in
-[AGENT_FOUNDATIONS.md](AGENT_FOUNDATIONS.md) and the PR's recorded runtime evidence.
+Multi-agent scenarios use `tick sprint` to accelerate 6000 game ticks at each size.
+They check kit completion and exact harvest accounting with production scheduling.
+Their tick-query timing is software-runner diagnostic data, NOT human-latency,
+natural-world, GPU, p95 server capacity or a one-hour uninterrupted session claim.
+No conclusion is drawn from an allocated cap alone.
 
-The earlier two-client timber/gallery report remains [CLIENT_PLAYTEST.md](CLIENT_PLAYTEST.md).
-It is historical evidence for that scenario; it must not be relabeled as new agent
-screenshots. A machine-readable report should include source SHA, run ID, assertions
-and capture names. Never equate defined tests with passing tests.
+## Gates and diagnostics
 
-## CI gates and artifacts
+`Required` fails unless Linux/Windows quality, all vanilla suites, graphical scenarios
+and all four multi-agent cases succeed. The tag publisher reuses this aggregate.
+All maintained test jobs have read-only repository permissions; actions are pinned
+to full SHAs. No `pull_request_target`. Branch protection is configured separately;
+this PR does not change repository policy or publish a release.
 
-Unit/validation/build jobs run on Linux and Windows. Vanilla integration runs with
-Java 25 on Linux. `Required` fails when a prerequisite fails, is cancelled or skipped.
-The separate graphical workflow is read-only and uploads screenshots/results/logs
-on success or failure. Branch protection is separate repository policy: require
-both `Required` and `Vanilla GUI, player controls and screenshots` to gate them.
+JUnit and isolated server logs upload even on failure. Graphical and multi-agent
+JSON reports include source/run provenance and scenario state; PNGs are direct
+captures, never generated or retouched. Screenshots do not establish smooth motion.
+A stopped RCON transport is not automatically a datapack crash; diagnose server logs
+and preserve failures instead of weakening unrelated assertions.
 
-Tests do not upload runtime credentials, server properties, world saves or JARs.
-RCON fixture writes are kept bounded; a huge command can close the connection before
-a datapack function is tested. Inspect failure logs to separate transport, test
-assumption and actual implementation failures; do not silently weaken assertions.
+## Remaining validation
 
-Actions are pinned to commit SHAs. No privileged `pull_request_target` workflow.
-Tag publishing requires CI and exact tag/project-version agreement, but no release
-is created merely by adding this configuration. The graphical gate is separate
-from the tag publisher unless explicitly added to that release policy.
-
-## Remaining manual/long-run testing
-
-Different GUI scales/key bindings, audio/accessibility, latency and authentication,
-natural terrain, multiple agents competing for shared resources, interleaved item
-transfers, extended sessions and production performance remain outside the bounded
-fixtures. Record this coverage separately; screenshots and short GUI scripts do not
-establish smooth movement, human play quality or general survival/PvP readiness.
+Natural terrain across seeds, audio/accessibility and other GUI scales, public
+server authentication/latency, mobs targeting mannequins, arbitrary enchantments,
+multi-hour sessions, station deadlocks in dense crowds, abrupt cross-file save
+failure, and real hardware capacity distributions remain separate work. A passing
+release gate certifies the declared scenarios only.

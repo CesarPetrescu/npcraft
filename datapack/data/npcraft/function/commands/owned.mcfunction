@@ -1,7 +1,9 @@
 # Called only after owner ID AND UUID authorization. All mutations are local to this controller.
 # Reject unknown actions before touching the controller or pending action.
-execute unless score #cmd np.tmp matches 4..16 unless score #cmd np.tmp matches 20..25 unless score #cmd np.tmp matches 30..32 unless score #cmd np.tmp matches 35 unless score #cmd np.tmp matches 40..42 unless score #cmd np.tmp matches 99 run return 0
+execute unless score #cmd np.tmp matches 4..16 unless score #cmd np.tmp matches 20..25 unless score #cmd np.tmp matches 30..35 unless score #cmd np.tmp matches 40..42 unless score #cmd np.tmp matches 99 run return 0
 function npcraft:agent/init
+execute if score #cmd np.tmp matches 33 run return run function npcraft:ui/plot
+execute if score #cmd np.tmp matches 34 run return run function npcraft:ui/status
 execute if score #cmd np.tmp matches 30 run return run dialog show @a[tag=npcraft.actor] npcraft:survival
 execute if score #cmd np.tmp matches 32 run return run function npcraft:ui/inventory
 execute if score #cmd np.tmp matches 40 run return run dialog show @a[tag=npcraft.actor] npcraft:rival_confirm

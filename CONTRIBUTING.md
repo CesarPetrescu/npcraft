@@ -1,29 +1,32 @@
 # Contributing
 
-Use Python 3.13 and Java 25. No Python package installation is required.
+Use Python 3.13, Java 25, and exact Minecraft Java 26.3. Core build tools use the
+standard library. Read AGENTS.md and docs/IRON_SURVIVAL_RIVAL.md first.
 
 ```sh
 python tools/validate.py
 python -m unittest discover -s tests -v
 python tools/build.py
 python tools/server_test.py --accept-eula
+python tools/v03_adversarial_tests.py --accept-eula --reports reports/adversarial
+python tools/reliability_tests.py --accept-eula --reports reports/reliability
+python tools/soak_test.py --accept-eula --agents 1,4,8,16 --ticks 6000
 ```
 
-Review the Minecraft EULA before passing the final flag. The runtime suite creates
-a disposable loopback-only world; do not rewrite it to use a developer's real save.
+Review the EULA before using runtime flags. GUI dependencies and all three real-client
+commands are in `.github/workflows/client-playtest.yml`. Use disposable worlds.
+Never point a fixture harness at a real saved world or a public multiplayer server.
 
-Keep functions in `datapack/data/npcraft/function/` (singular). Preserve namespace
-boundaries, finite command budgets, ID+UUID ownership checks and transaction order.
-World edits belong only in the validated work action, never navigation. Preserve
-full tool components. Do not reclaim “missing” controllers without proving they
-are deleted rather than unloaded. See architecture for shared scratch-state rules.
+Keep actual source and evidence changes reviewable in a feature PR. Tests must cover
+negative cases and conservation, not merely parse the pack. Do not copy paid
+Marketplace assets or license-incompatible third-party code. New schemas require
+migrations preserving old backpack/timber/ownership records.
 
-Each behavior change needs a regression fixture. Update scope, limitations and
-CHANGELOG alongside player-visible changes. Record manual client tests separately.
-Generated ZIPs, server binaries, worlds, credentials and logs are never committed.
+No navigation block mutations or production force-loading. Action/transfer commits
+must revalidate current state. Do not leave global scratch live across a yield or
+nest interleaved agent execution. Consent, owner UUID and persistent approval are
+separate concerns; deny by default and allow consent revocation from anywhere.
 
-To release, bump project.json, pack metadata and displayed version consistently;
-run all checks and the manual checklist; create `v<version>`. The release workflow
-refuses a mismatched tag and publishes ZIP/checksum only after CI. It does not
-create tags or silently upgrade Minecraft. Use prerelease version suffixes until
-the production acceptance criteria are genuinely met.
+Update version metadata and compatibility evidence together. Releases require all
+CI layers and tag/version agreement; adding a workflow does not create a release
+or branch protection. Do not commit server JARs, worlds, account tokens or properties.

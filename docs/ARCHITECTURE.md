@@ -1,81 +1,46 @@
-# Architecture
+# Architecture — 0.3
 
 ```text
-Actual player trigger / native dialog
-           |
-approval + dimension + range + owner ID and UUID
-           |
-persistent marker controller
-           |
-fair queue: one allocated record selected per server tick
-           |
-approved owner nearby? -> cooldown -> selected mode
-           |
-follow / home / legacy timber / agent goal
-           |
-bounded navigation + validated world/inventory actions
-           |
-mannequin presentation sync
+player trigger/dialog -> approval / UUID / range -> owned controller
+     | action42: global consent revocation before ordinary locality checks
+     v
+persistent marker: inventory, legacy items, goal, route, survival, rival epoch
+     |
+     +-> fast synchronous pass (up to16): death/food, consent, vision, cached motion
+     +-> fair one-record slow queue: prerequisites, local BFS, work/actions
+     |
+     v
+validated native world/item operations -> mannequin presentation sync
 ```
 
-## Authoritative state
+The controller marker owns all items and persistent decisions. Native mannequin
+Health is authoritative only after mortality is enabled; equipment on it is a
+marked presentation copy. Losing a body produces a persistent tombstone, real item
+drops, and a safe empty respawn—not reconstruction from a stale inventory copy.
 
-`minecraft:marker` with tag `npcraft.bot` holds custom `data` and controller scores.
-A `minecraft:mannequin` with tag `npcraft.body` shares its `np.id`. The mannequin is
-an invulnerable cosmetic body, not an authenticated player and not an item store.
+Scoreboards hold IDs/modes/deadlines; marker `data` holds structured records.
+`npcraft:state` stores the round-robin allocation queue, owner ACL and consent
+epochs. IDs are not recycled on reload. New records initialize additively, retaining
+the old timber tool/cargo and all36 agent slots. Unloaded allocations remain counted.
 
-Core marker record: schema, stable companion ID, numeric owner ID, full owner UUID,
-home/work-plot/output-container coordinates, navigation destination, target and scan
-cursor. Legacy timber tool and cargo remain in `data.tool`/`data.cargo`.
+Function chains are synchronous. Each planner/inventory operation resets and uses
+shared scratch within that call only. Future multi-tick planning must persist its
+continuation state on the controller; do not put it in shared temporary storage.
+Inventory mutations stage a full snapshot, validate capacity and external success,
+then commit. Workstations and supported block edits have separate permission checks;
+pathfinding never inherits a mining/construction permission.
 
-0.2 adds `data.inventory={version:1,slots:[36 entries]}` and `data.agent` with goal,
-intent, state, reason, observation snapshot, assigned workbench, display item, and
-bounded failed-target memory. [Detailed agent contract](AGENT_FOUNDATIONS.md).
+Local bounded BFS produces per-controller route steps. Fast execution revalidates
+support, clearance, edge height, occupancy and optional arena constraints. A changed
+route or next cell clears the cache. Global graph completeness, mutual-agent
+reservation protocols and smooth continuous physics are not implemented.
 
-Scoreboards keep player identity/selection/allocation counts and controller
-mode/status/cooldown/cut deadlines. `npcraft:state queue` is a saved list of `{id}`
-records. The scheduler rotates one head record per tick and processes it only when
-its marker is loaded and its approved owner is nearby in the Overworld. Unloaded
-allocations are not deleted or omitted from allocation limits.
+Rivals use an explicit UUID opponent and persistent consent epoch, not nearest
+player targeting. Only line-of-sight observations enter last-seen memory. Attacks
+have independent consent/reach/LOS/cooldown checks even if a planner is stale.
+The global withdrawal action is permitted even when the owner moves dimensions or
+loses ordinary control range; unloaded rivals cannot retain permission indefinitely.
 
-Initialization is gated by persistent metadata; reload does not zero IDs, items or
-pause state. Agent records are initialized lazily and additively. No entity is
-reclaimed merely because it cannot be found in loaded chunks.
-
-## Scratch-state execution contract
-
-Command storage and `#... np.tmp` scores are shared scratch. Every function chain
-is synchronous, and only one autonomous controller chain is entered per tick.
-Player requests are processed serially. Do not add scheduled continuations,
-asynchronous work or nested autonomous dispatch without redesigning this contract.
-
-Inventory operations snapshot authoritative slots, stage modifications, then commit
-once all ingredient/capacity checks and external transfers succeed. Production
-mutations are tightly restricted: only validated harvest commits remove blocks.
-Crafting/drop transfers must not commit a partly modified snapshot on failure.
-This is logical atomicity, not crash-proof persistence across separate save files.
-
-## Navigation contract
-
-Local BFS uses at most 128 temporary nodes within a six-block sphere. Each node
-retains its first step. Cardinal walk, +1 full-block ascent and -1/-2 descents are
-considered only with support and body clearance. The actual chosen step is checked
-again immediately before movement, including overhead/drop-column sweeps. No
-navigation block edits, chunk force-loading, swimming or rescue wall teleport.
-
-Far goals use a strictly improving explored frontier with Manhattan distance in
-X/Y/Z. This is not a globally complete planner. Movement remains grid-stepped, not
-continuous physics; complex terrain may safely stop it. Temporary `npcraft.nav`
-markers are removed at the end of each synchronous plan and on load.
-
-## Ownership and lifetime
-
-Public actions come from a finite trigger table. UI visibility is not authorization:
-commands require approval, distance, owner ID and UUID checks. Read-only panel/status
-requests and unknown action IDs do not invalidate work. Returns create public drops.
-
-Dismissal returns backpack and legacy items first, aborts if any transfer failed,
-retires the cosmetic body after clearing its display copy, removes the queue entry,
-then deletes the controller. Operators who manually alter NBT/scores or copy display
-equipment are outside the security model. External claim-plugin permissions are
-not automatically enforced by vanilla datapack commands.
+See [full record/lifecycle contract](IRON_SURVIVAL_RIVAL.md), [operations](OPERATIONS.md)
+and [testing](TESTING.md). Logical transactions do not make Minecraft's separate
+save files a crash-proof database; use complete consistent backups.

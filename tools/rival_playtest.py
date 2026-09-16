@@ -58,7 +58,8 @@ def run(args):
             return float(match.group(1))
         def photograph(name):
             target=[value(BOT,f'Pos[{i}]') for i in range(3)]
-            camera=(8.5,64.,7.5)
+            # Face the open center lane, not a foreground resource pillar.
+            camera=(target[0],64.,target[2]+5) if target[2]<=6 else (target[0]+5,64.,target[2])
             dx,dy,dz=target[0]-camera[0],target[1]+1.2-(camera[1]+1.62),target[2]-camera[2]
             yaw=math.degrees(math.atan2(-dx,dz));pitch=-math.degrees(math.atan2(dy,math.hypot(dx,dz)))
             server.command(f'tp {PLAYER} {camera[0]} {camera[1]} {camera[2]} {yaw} {pitch}')
@@ -104,6 +105,10 @@ def run(args):
             result['iron_inventory']=c(f'data get entity {BOT} data.inventory')
             result['built_furnace']=c(f'data get entity {BOT} data.agent.furnace')
             photograph('02-self-built-workstations-and-iron-pick')
+            client.chat('/trigger npcraft set 33')
+            check('plot_preview_preserves_completed_goal',f'if data entity {BOT} data.agent{{reason:"iron_pickaxe_obtained"}}')
+            client.chat('/trigger npcraft set 34');client.shot('07-read-only-task-snapshot');client.key('Escape')
+            check('status_view_preserves_earned_tool',f'if data entity {BOT} data.inventory.slots[].item{{id:"minecraft:iron_pickaxe",count:1}}')
             client.chat('/trigger npcraft set 32');client.shot('03-authoritative-backpack-view');client.key('Escape')
             # Food is a disclosed separate survival-test supply, not a progression resource grant.
             c(f'item replace entity {PLAYER} weapon.mainhand with minecraft:bread 4')
@@ -130,6 +135,10 @@ def run(args):
             after=value(PLAYER,'Health')
             if not after<before:raise AssertionError('Consenting player was not hit')
             result['observed_pvp_damage']={'before':before,'after':after}
+            # Capture the actual first hit without taking extra hits while framing.
+            c('tick freeze')
+            try:client.shot('08-first-legitimate-melee-hit')
+            finally:c('tick unfreeze')
             check('weapon_wears_on_real_hit',f'if data entity {BOT} data.inventory.slots[].item{{id:"minecraft:iron_sword",components:{{"minecraft:damage":1}}}}')
             # Stop from outside both the action range and arena; this must not require proximity.
             c(f'tp {PLAYER} 25.5 64 0.5')

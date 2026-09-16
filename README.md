@@ -1,60 +1,52 @@
 # NPCraft
 
 [![CI](https://github.com/CesarPetrescu/npcraft/actions/workflows/ci.yml/badge.svg)](https://github.com/CesarPetrescu/npcraft/actions/workflows/ci.yml)
-[![Graphical playtest](https://github.com/CesarPetrescu/npcraft/actions/workflows/client-playtest.yml/badge.svg)](https://github.com/CesarPetrescu/npcraft/actions/workflows/client-playtest.yml)
 
-**Controllable vanilla Minecraft companions with resource-accounted autonomous goals.**
+**Original vanilla companions that gather, craft, build workstations and can become an opt-in rival.**
 
-> **0.2.0-alpha.1 — experimental. Use a backup or a disposable world.**
-> This is a worker/agent foundation, not a complete survival player or PvP opponent.
-> Bodies are invulnerable; movement is grid-stepped. No client mod, mandatory
-> resource pack, language model or external AI service is needed.
+**0.3.0-alpha.1 — experimental. Minecraft Java 26.3, datapack 121.0, Java 25.**
+No client mod, mandatory resource pack, plugin or external AI service. Use a backed-up
+world or a disposable test world. Compatibility with other game versions is not implied.
 
-## Compatibility
+The new bounded progression chain starts with an empty backpack, not free equipment:
 
-| Component | Target |
-|---|---|
-| Game | Minecraft **Java 26.3**, vanilla |
-| Datapack | **121.0**, exact tested target |
-| Server runtime | Java **25+** |
-| Build/tests | Python **3.13**, standard library |
-| Optional graphical tests | Linux, Xvfb/Mesa, xdotool, ImageMagick |
+```text
+wood -> planks/sticks -> build crafting table -> wooden pickaxe
+     -> stone -> stone pickaxe + build furnace -> coal + raw iron
+     -> actual furnace/fuel -> iron pickaxe -> iron sword in rival mode
+```
 
-See [primary version references](docs/SOURCES.md). Editing pack.mcmeta is not proof
-of compatibility with another game version. Bedrock, Paper/Fabric-specific behavior
-and Realms are not certified.
+Resources and a safe work area must exist in an assigned plot. This is **not** an
+unrestricted survival player: there is no natural cave exploration, general recipe
+solver, autonomous food production, armor/shield/bow manager or full player physics.
 
-## What is here
+## Delivered scope
 
 | System | Implemented behavior |
 |---|---|
-| Companion | Mannequin presentation, persistent marker controller, stable owner/companion IDs |
-| Controls | Recruit/select, follow/stay/home, jobs, diagnostics, inventory return and dismissal |
-| Authorization | Explicit operator approval, owner ID **plus UUID**, range checks |
-| Navigation | Bounded cardinal BFS; full-block walk, ascend one block, descend at most two; source/landing and overhead checks |
-| Timber job | Timed oak/birch harvesting inside a designated 7 x 7 x 4 plot; real iron axe and barrel deposits |
-| Agent backpack | 36 slots, complete item-stack records, exact-component merging, supported stack limits 1/16/64 |
-| Action API | Closed mine/craft actions; revalidated reach, permissions, resources and capacity; explicit outcome/reason |
-| Goal planner | An empty backpack to a stone pickaxe, choosing resource and recipe prerequisites automatically |
-| Memory/recovery | Bounded, expiring failed-target memory; backoff and owner cancellation |
-| Distribution | Deterministic installable ZIP and SHA-256; unit, vanilla-server and graphical CI |
+| Inventory | 36 full-item-record backpack slots, exact component-aware merging and staged transfers; read-only native inventory view. Legacy timber tool/cargo remain separate. |
+| Planning | Finite stone-pickaxe, iron-pickaxe and rival-kit prerequisite controllers; inspect actual inventory rather than an artificial technology level. |
+| Workstations | Craft and place a real crafting table and owned furnace inside the workplot, consuming materials. Mine declared supported ores and consume actual fuel in the native furnace. |
+| Tools | Shared usable-tool readiness, supported wood/stone/iron picks and swords, damage and descriptive item data preserved. Unsupported mechanical components are rejected for use, not silently simulated. |
+| Movement | Per-controller cached routes; cardinal full-block walk, +1 ascent, -1/-2 descent; revalidate next cell. Fast runtime work is separate from expensive round-robin planning. |
+| Mortality | Explicit opt-in native health/damage, simplified supplied-food healing, single-drop inventory death handling, empty safe respawn and bounded recovery of existing marked drops. |
+| Rival | Explicit consent, revocable at any distance/dimension; bounded home arena; line-of-sight last-seen memory; supported melee reach, cooldown, tool wear and low-health return-home retreat. |
+| Controls | Existing companion/timber/agent menus plus iron/rival controls, backpack view, status snapshot and one-shot work-bound preview. |
+| Verification | Windows/Linux quality checks, real vanilla-server suites, three actual-client GUI scenarios, multi-agent accelerated progression, artifacts and CI-gated releases. |
 
-The planner is a finite dependency controller, **not general GOAP or an LLM**. The
-backpack's 36 slots already include the conceptual nine hotbar slots; it is not
-36 + 9. There is no drag-and-drop backpack screen, armor/offhand manager or hunger
-system yet. The old timber axe/cargo remain separate to preserve existing saves.
+A configured test does not prove success: inspect the completed **Required** check,
+JUnit/JSON reports, exact source SHA and reviewed screenshots. Historical galleries
+remain attributed to their original versions, not relabeled as newer gameplay.
 
-## Install
+## Installation and first iron goal
 
-Use a successful CI run's `npcraft-datapack` artifact or a published release. The
-artifact may be an outer ZIP; install the **inner** file:
+Copy the **inner installable ZIP** `npcraft-0.3.0-alpha.1-mc26.3.zip` into
+`<world>/datapacks/`. Remove the previous NPCraft ZIP first; never load two versions
+simultaneously. GitHub's source ZIP is not itself the installable datapack.
+Alternatively install the repository's `datapack/` folder so that
+`<world>/datapacks/npcraft/pack.mcmeta` exists.
 
-```text
-<world>/datapacks/npcraft-0.2.0-alpha.1-mc26.3.zip
-```
-
-Do not install GitHub's source ZIP. Alternatively copy the repository's `datapack/`
-directory so `<world>/datapacks/npcraft/pack.mcmeta` exists. In-game, as an operator:
+In game, with cheats/operator permission:
 
 ```mcfunction
 /reload
@@ -62,100 +54,94 @@ directory so `<world>/datapacks/npcraft/pack.mcmeta` exists. In-game, as an oper
 /trigger npcraft set 1
 ```
 
-The grant command approves the executing player. From a server console, approve
-someone explicitly with `execute as <player> run function npcraft:admin/grant`.
-Normal controls then use permission-zero `/trigger` requests.
+An operator approving someone else uses
+`/execute as <actual-player-name> run function npcraft:admin/grant`.
+Subsequent controls use permission-zero trigger requests, not operator powers.
 
-## Autonomous stone-pickaxe demonstration
+Recruit a companion, select it, then set a workplot from the management panel.
+The plot is **7 x 7 x 4**, X/Z +/-3 around your standing block and Y +0..+3.
+**Every supported block in it is eligible, including blocks in player builds.**
+Operator-approved users are trusted to designate only land they are permitted to use.
+External claim plugins are not automatically honored by command-driven world edits.
 
-1. Recruit a companion on supported full-block ground in the Overworld. Do not
-   give it a tool or resources: it can harvest the supported logs by hand.
-2. Stand at the center of an allowed work plot and use `/trigger npcraft set 8`.
-   The plot is X/Z +/-3 from that block and Y +0..+3. **Every supported block in the
-   plot is eligible**, including player-placed building blocks. Exclude buildings.
-3. Supply a reachable **real crafting table**. Stand on it and issue
-   `/trigger npcraft set 24`. A table embedded flush with the ground makes the
-   first demonstration simple. The agent does not create its own table yet.
-4. Ensure the plot contains at least **two ordinary oak/birch logs and three
-   exposed stone/cobblestone blocks**, with clear approaches. An accessible test
-   plot is not a substitute for unlimited cave/exploration capability.
-5. Use `/trigger npcraft set 20` for the agent panel, then **Make stone pickaxe**,
-   or use `/trigger npcraft set 23`. Remain within 64 blocks.
+Provide reachable oak/birch logs, stone, coal ore and ordinary iron ore, with clear
+full-block walking lanes and adjacent space for workstations. Do not put ore under
+the companion's feet: it refuses to mine its own support. The resource-finite test
+layout is documented in `tools/rival_playtest.py`; arbitrary natural terrain is not
+certified by that fixture. Fuel may continue burning while the NPC travels, so real
+work layouts may need additional coal.
 
-The controller chooses prerequisites, rather than requiring commands per step:
+Open the new panel and start **Goal: iron pickaxe**:
 
-```text
-Gather logs -> craft planks/sticks -> craft wooden pickaxe
-            -> mine three stone blocks -> craft stone pickaxe -> finish
+```mcfunction
+/trigger npcraft set 30
 ```
 
-Inputs are consumed; there is no free gear. Starting empty, the supported recipe
-chain uses two logs, produces eight planks, turns two planks into four sticks,
-uses three planks/two sticks for the wooden pick, mines three cobblestone, and
-consumes the cobblestone/two sticks for the stone pick. Three planks remain, and
-the wooden pick has three durability uses. Output stays in the backpack.
-
-`/trigger npcraft set 25` shows the goal state, reason and backpack records.
-`/trigger npcraft set 11` cancels work. Opening/status controls do not restart a cut.
-To return the backpack, use `/trigger npcraft set 22`: work stops and contents are
-**public item drops at the companion**, not private delivery to your inventory.
+No supplied crafting table or furnace is required for the iron goal. Normal
+companion work still requires its approved owner within 64 blocks in the Overworld.
+A successful goal stops gathering; blocked actions report a reason rather than
+creating free items. The original stone goal and timber worker remain available.
 
 ## Controls
 
-Select the nearest owned companion within **8 blocks**. Orders require the selected
-companion within **16 blocks**. Autonomous work requires the approved owner within
-**64 blocks** in the Overworld. Offline/unloaded/out-of-range workers pause; no chunks
-are force-loaded. Allocation caps are 4 per owner / 16 globally, not measured capacity.
+Press G / use Quick Actions, or use `/trigger npcraft set <number>`.
+Selection range is 8 blocks; ordinary orders require 16 blocks.
 
-| Trigger value | Action | Trigger value | Action |
+| Number | Action | Number | Action |
 |---:|---|---:|---|
-| 1 | Original G/pause panel | 2 | Recruit |
-| 3 | Select nearest owned | 4 | Follow |
-| 5 | Stay | 6 | Set home here |
-| 7 | Return home | 8 | Set work plot here |
-| 9 | Assign barrel beneath player | 10 | Start original timber job |
-| 11 | Stop/cancel | 12 | Dismiss confirmation |
-| 13 | Original status | 14 | Give held iron axe to timber job |
-| 15 | Return timber axe | 16 | Return timber cargo |
-| 20 | Agent/backpack panel | 21 | Give held stack to backpack |
-| 22 | Stop and return backpack | 23 | Make stone pickaxe goal |
-| 24 | Assign crafting table beneath player | 25 | Agent/backpack status |
-| 99 | Confirm dismissal | | |
+| 1 | Companion panel | 2 | Recruit |
+| 3 | Select nearest owned | 4 / 5 | Follow / Stay |
+| 6 / 7 | Set home / Return home | 8 / 9 | Set plot / Assign barrel beneath player |
+| 10 / 11 | Timber job / Stop job | 12 / 99 | Dismiss confirmation / Confirm |
+| 13 | Companion status | 14 / 15 / 16 | Give timber axe / Return axe / Return cargo |
+| 20 | Stone-agent panel | 21 / 22 | Give held stack to backpack / Return backpack |
+| 23 / 24 / 25 | Stone goal / Assign table below player / Agent status | 30 / 31 | Iron/rival panel / Iron goal |
+| 32 / 33 / 34 | View backpack / Preview plot / Task and health snapshot | 35 | Enable mortality |
+| 40 / 41 / 42 | Rival consent screen / Accept / End rival globally | | |
 
-Use `/trigger npcraft set <value>`. The existing G/pause menu is preserved; the new
-agent panel is opened using value 20. Inventory transfers support full item data,
-but **using** every stored item/enchantment in AI is not implemented. Mining picks
-are restricted to plain wooden/stone picks, with optional durability damage.
+Returning items or dismissing creates **public item drops**. Others can pick them
+up. Backpack return stops work first. Views and unknown requests do not reset
+pending work. 36 slots include the conceptual nine hotbar slots, not 36 plus nine.
+The inventory view is **read-only**, not a drag-and-drop chest interface.
 
-## Original timber worker
+The timber worker still uses its given ordinary unenchanted iron axe and separate
+single-type log cargo, depositing only into assigned barrel empty slots. New
+backpack tools do not silently replace this legacy system.
 
-Assign a plot (8), stand on an output barrel and assign it (9), give a normal
-unenchanted iron axe (14), then start the timber job (10). The legacy load is one
-stack of oak/birch logs; deposits use empty barrel slots, not stack merging. Full or
-missing barrels preserve cargo. This mode does not use the new backpack for output.
+## Mortality and a first rival match
 
-## Safety and limitations
+Supply food through **Give held stack** before enabling mortality. This version
+uses cooked beef, bread or apples; it does not hunt/farm for them. Mortality remains
+enabled after leaving rival mode. Native health/damage is authoritative, but the
+food meter and healing are deliberately simplified, not full vanilla player hunger.
 
-Navigation never breaks or places blocks. It checks full-block support and two
-clear body cells, plus the swept overhead/drop column. One-block ascents and drops
-up to two blocks are supported; slabs, stair-shaped blocks, swimming, ladders,
-doors, portals, bridging and general parkour are not. Movement remains discrete,
-not a physical jump animation. Bounded search may safely stop at complex obstacles.
+For a duel, stand in Survival or Adventure near your selected owned companion,
+configure its plot/home, open **Start rival...**, read the warning and accept.
+It builds a supported kit from permitted resources and attacks only **you**, the
+consenting player. It never chooses arbitrary other users as opponents.
 
-Only operator-approved users may control companions. Approved users are trusted to
-designate permitted land: vanilla commands do not automatically honor claim plugins.
-The goal's allowed harvest set is oak/birch logs, stone and cobblestone in the plot.
-No ores, arbitrary block loot/enchantment semantics or custom recipe discovery.
+The arena is home X/Z +/-16, Y +/-8. It can sense the opponent within 16 blocks only
+with line of sight; hidden positions do not refresh last-seen memory. Melee uses
+2.8-block reach, a 20-tick cooldown and real tool wear. Low native health triggers
+a simple return-home retreat, not sophisticated combat tactics.
 
-No health/hunger/death progression, combat/PvP, base building, unrestricted world
-memory or independent offline rivals are implemented. See [scope](docs/SCOPE.md)
-and [the next milestones](docs/ROADMAP.md), not marketing claims, for the boundary.
+Exit from anywhere, including another dimension or after approval is revoked:
 
-Back up the **whole world**. Inventory transactions are synchronous logical changes,
-not crash-proof cross-region database commits. Agent state is added lazily without
-resetting existing UUIDs, timber items or counters. Do not downgrade after storing
-backpack items. Dismiss loaded companions and collect all drops before uninstalling.
-Do not use blanket `/kill`: the invisible marker owns the authoritative inventory.
+```mcfunction
+/trigger npcraft set 42
+```
+
+Consent epochs and persistent ACL checks prevent an old unloaded rival from becoming
+active under a later unrelated opt-in. Rival thinking may continue without owner
+proximity **only while its chunk is loaded** and consent/approval remain valid.
+No offline resources are invented, and the datapack never force-loads chunks.
+
+On death, authoritative carried items drop once. After a delay it can respawn empty
+at a safe loaded home and attempt to recover actual nearby marked loot. Stolen,
+burned, despawned or unreachable items are not recreated. Workstations remain in
+the world with any inputs/fuel/output still in them; death is not a rollback.
+
+## Server operations
 
 ```mcfunction
 /function npcraft:admin/pause
@@ -163,36 +149,49 @@ Do not use blanket `/kill`: the invisible marker owns the authoritative inventor
 /execute as <player> run function npcraft:admin/revoke
 ```
 
-## Build, tests and evidence
+Approval and ordinary ownership are separate from rival consent. Pause stops work
+and combat but does not make mortal bodies immune to external damage. Save backups
+of the **whole world**, including entity regions, scoreboards and command storage.
+Synchronous item staging is not crash-proof atomicity across separate save files.
+
+Load and dismiss all companions, collect their returned items, and account for
+station contents before uninstalling. Removing the ZIP alone leaves saved entities.
+Do not blindly `/kill` controllers or reset allocation counters: unloaded does not
+mean deleted. See [operations](docs/OPERATIONS.md).
+
+## Develop, test, release
+
+Python 3.13, Java 25. Core tools use Python's standard library.
 
 ```sh
 python tools/validate.py
 python -m unittest discover -s tests -v
 python tools/build.py
 python tools/server_test.py --accept-eula
+python tools/v03_adversarial_tests.py --accept-eula --reports reports/adversarial
+python tools/reliability_tests.py --accept-eula --reports reports/reliability
+python tools/soak_test.py --accept-eula --agents 1,4,8,16 --ticks 6000
 ```
 
-The server test requires Java 25 and explicit [Minecraft EULA](https://aka.ms/MinecraftEULA)
-acceptance. It downloads the exact official server with size/hash checks and runs
-only a disposable loopback world. Graphical CI additionally runs:
+Review the Minecraft EULA before passing `--accept-eula`. Runtime tests use disposable
+loopback-only worlds. GUI tests additionally use Xvfb/Mesa, xdotool and ImageMagick;
+see `.github/workflows/client-playtest.yml` for exact setup and the three commands.
+No game binaries, account tokens, server properties or world saves are committed.
 
-```sh
-xvfb-run -a python tools/client_playtest.py --accept-eula
-xvfb-run -a python tools/agent_playtest.py --accept-eula
-```
+The multi-agent run uses accelerated **tick sprint** and declared resource plots.
+It checks sustained production logic and item accounting, not natural-world success,
+human latency, GPU performance or production capacity on your server.
 
-These use real unmodified game clients with synthetic local identities. RCON sets
-up disclosed fixtures and checks state; player requests originate from GUI input.
-Logs/results/captures are artifacts. A successful automated scenario is not a claim
-of a human survival playthrough or production performance.
+**Required** aggregates quality, vanilla, graphical and multi-agent jobs. The tag
+publisher reuses that full workflow. Branch protection must separately require the
+check; this repository code does not alter merge policies or create a release.
 
-[Agent design and test contract](docs/AGENT_FOUNDATIONS.md) ·
-[Earlier two-client gallery](docs/CLIENT_PLAYTEST.md) ·
-[Architecture](docs/ARCHITECTURE.md) · [Operations](docs/OPERATIONS.md) ·
-[Testing](docs/TESTING.md) · [Contribution guide](CONTRIBUTING.md)
+[Current contract](docs/IRON_SURVIVAL_RIVAL.md) · [Scope](docs/SCOPE.md) ·
+[Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) ·
+[Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 ## License
 
-Original code is MIT. No paid Marketplace code/assets or third-party pathfinder is
-copied. No Minecraft binaries, textures, accounts or credentials are redistributed.
-Not an official Minecraft product; not approved by or associated with Mojang/Microsoft.
+Original MIT-licensed implementation. No paid Marketplace code/assets or third-party
+pathfinder copied. Not an official Minecraft product; not approved by or associated
+with Mojang or Microsoft.

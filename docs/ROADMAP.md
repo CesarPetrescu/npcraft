@@ -1,39 +1,42 @@
 # Roadmap
 
-## Delivered milestones
+## Delivered
 
-**0.1:** Owned companion controllers, native controls, bounded flat navigation,
-timber harvesting/accounting, deterministic distribution, vanilla and real-client CI.
+0.1: owned companions, native controls, bounded timber work, resource accounting,
+vanilla integration and actual-client GUI testing.
 
-**0.2:** Initial 36-slot backpack transactions, validated action outcomes, a finite
-stone-tool prerequisite goal, failed-target memory, conservative vertical edges,
-and expanded regression/graphical scenarios. These are foundations, not full player
-parity or an independent opponent. [Current contract](AGENT_FOUNDATIONS.md).
+0.2: 36-slot component-preserving backpack, validated actions, finite stone-tool
+goal, failed-target memory, conservative vertical navigation.
 
-## Next: generalize one tested layer at a time
+0.3: usable-tool consistency, self-built table/furnace and native iron smelting,
+finite iron/rival kits, per-controller cached routes, fast runtime work, read-only
+backpack/status/plot UI, optional mortality/meals/death/recovery, consent-bound
+bounded melee rivals, and full CI including graphical and multi-agent acceptance.
+See current scope and test reports for exact supported behavior, not feature names.
 
-1. **Inventory and actions:** visible backpack UI, authorized equipment use, table
-   construction, resource/accounting interruption tests, safe multi-worker output
-   storage and explicit per-action budgets. Keep names/components intact.
-2. **Broader progression:** game-data-backed recipe prerequisites; generic supported
-   harvest rules; iron, fuel and actual furnace operations. Do not invent resources
-   or mask unsupported enchantments with hard-coded rewards.
-3. **Movement and perception:** smoother presentation, bounded cached paths, terrain
-   primitives with clearance tests, incremental exploration and finite stale-aware
-   resource memory. Test changing terrain, not only fixed clear plots.
-4. **Survival then opponents:** health/food/death and item-safe recovery; per-mob
-   combat/retaliation checks; fair player last-seen tracking, retreat and equipment
-   assessment. Only then add independent rival objectives, bases and dimensions.
+## Remaining, not hidden inside the 0.3 claim
 
-## Acceptance gates
+1. **Unified inventory/equipment:** transactional migration of legacy tool/cargo,
+   armor/offhand and drag-and-drop UI. Do not remove legacy state without migration
+   fixtures and full item-conservation tests.
+2. **Better navigation and world knowledge:** continuous validated movement, more
+   collision shapes, doors/swimming/climbing, time-budgeted incremental searches,
+   longer-term observed resource maps, seed-based exploration, expiring reservations
+   for contested workstations/routes. Never grant omniscient ore/player knowledge.
+3. **General progression and survival:** game-data-derived supported recipes,
+   quantity-aware material/fuel planning, food production, player-like survival
+   mechanics and validated per-mob retaliation. This is separate from storing items.
+4. **Richer rivals:** retreat cover selection, shields/bows, equipment assessment,
+   difficulty/reaction parameters, factions and explicit match objectives. Consent,
+   non-opponent protection, real reach/cooldowns and loss of sight remain invariants.
+5. **Construction and dimensions:** material-accounted blueprints and placement
+   permissions, portal policies and recovery. No arbitrary building/raid promise.
 
-An empty-backpack stone-tool fixture validates the current goal only. A later iron
-milestone must obtain iron equipment from declared world resources without hidden
-inventory injection. A survival milestone needs natural-terrain day/night sessions,
-death/recovery and safe interruption. An opponent milestone needs two-player PvP
-with legitimate reach/cooldowns and no omniscient target tracking.
+## Acceptance before expansion
 
-Profile 1/4/8/16 workers on named hardware and report command cost, entity count,
-queue latency and MSPT distributions before asserting capacity. Current allocation
-caps are safeguards, not measured performance. Full survival/PvP may justify an
-optional server engine, but this iteration does not add or require one.
+Keep old GUI and accounting regressions passing. Add changing-world, contested
+resource and natural-world tests. Compare multiple seeds and record blocked time,
+completion rate, remaining resources, command cost and worst-case tick behavior.
+Accelerated prepared plots are useful regression evidence, not natural-world proof.
+A richer optional server engine can be evaluated on the same acceptance scenarios
+without silently changing the vanilla installation contract.
