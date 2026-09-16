@@ -69,10 +69,16 @@ jobs:
           path: reports/
           if-no-files-found: warn
           retention-days: 14
+  visual:
+    name: Graphical acceptance
+    needs: quality
+    uses: ./.github/workflows/client-playtest.yml
+    permissions:
+      contents: read
   required:
     name: Required
     if: always()
-    needs: [quality, vanilla]
+    needs: [quality, vanilla, visual]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
@@ -80,4 +86,5 @@ jobs:
         env:
           QUALITY: ${{ needs.quality.result }}
           VANILLA: ${{ needs.vanilla.result }}
-        run: test "$QUALITY" = success && test "$VANILLA" = success
+          VISUAL: ${{ needs.visual.result }}
+        run: test "$QUALITY" = success && test "$VANILLA" = success && test "$VISUAL" = success
