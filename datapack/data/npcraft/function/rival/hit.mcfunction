@@ -1,0 +1,1 @@
+$execute store success score #hit_ok np.tmp run damage @a[tag=npcraft.opponent,distance=..2.8,limit=1] $(damage) minecraft:mob_attack by @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)},limit=1]

@@ -1,0 +1,11 @@
+# All-or-nothing logical recipe transaction; no server tick can interleave.
+function npcraft:inventory/load
+function npcraft:inventory/remove {kind:"minecraft:iron_ingot",count:2}
+execute unless score #inv_ok np.tmp matches 1 run return run function npcraft:actions/result {state:"blocked",reason:"missing_ingredients"}
+function npcraft:inventory/remove {kind:"minecraft:stick",count:1}
+execute unless score #inv_ok np.tmp matches 1 run return run function npcraft:actions/result {state:"blocked",reason:"missing_ingredients"}
+data modify storage npcraft:inv input set value {"item":{"id":"minecraft:iron_sword","count":1,"components":{"minecraft:damage":0}},"max":1}
+function npcraft:inventory/insert
+execute unless score #inv_ok np.tmp matches 1 run return run function npcraft:actions/result {state:"blocked",reason:"backpack_full"}
+function npcraft:inventory/commit
+function npcraft:actions/result {state:"succeeded",reason:"crafted"}

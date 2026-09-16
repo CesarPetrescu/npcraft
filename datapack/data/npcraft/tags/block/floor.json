@@ -31,6 +31,7 @@
     "minecraft:polished_diorite",
     "minecraft:polished_granite",
     "minecraft:smooth_stone",
-    "minecraft:crafting_table"
+    "minecraft:crafting_table",
+    "minecraft:furnace"
   ]
 }

@@ -20,4 +20,6 @@ execute if score #ty np.tmp matches 1 unless block ~ ~2 ~ #npcraft:clear run ret
 $execute if score #ty np.tmp matches -1 positioned $(x) $(y) $(z) unless block ~ ~2 ~ #npcraft:clear run return 0
 $execute if score #ty np.tmp matches -2 positioned $(x) $(y) $(z) unless block ~ ~2 ~ #npcraft:clear run return 0
 $execute if score #ty np.tmp matches -2 positioned $(x) $(y) $(z) unless block ~ ~3 ~ #npcraft:clear run return 0
+$execute positioned $(x) $(y) $(z) if entity @e[type=minecraft:marker,tag=npcraft.bot,distance=..0.65] run return 0
+execute if data entity @s data.rival{enabled:1b} run return run function npcraft:rival/step_allowed with storage npcraft:nav landing
 return 1

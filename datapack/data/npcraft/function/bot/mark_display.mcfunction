@@ -1,0 +1,1 @@
+$execute if items entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)},limit=1] weapon.mainhand * run data modify entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)},limit=1] equipment.mainhand.components."minecraft:custom_data".npcraft_visual set value 1b

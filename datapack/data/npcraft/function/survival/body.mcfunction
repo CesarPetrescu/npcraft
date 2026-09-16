@@ -1,0 +1,1 @@
+$data merge entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)},limit=1] {Invulnerable:0b,drop_chances:{mainhand:0.0f,offhand:0.0f,head:0.0f,chest:0.0f,legs:0.0f,feet:0.0f},DeathLootTable:"minecraft:empty"}

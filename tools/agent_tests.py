@@ -267,7 +267,7 @@ def test_agent_best_tool_and_legacy_display(s):
 
 
 def test_agent_unsupported_tool_does_not_satisfy_mining_prerequisite(s):
-    put(s, 'minecraft:wooden_pickaxe', 1, 1, {'minecraft:custom_name': 'Stored but not emulated'})
+    put(s, 'minecraft:wooden_pickaxe', 1, 1, {'minecraft:unbreakable': {}})
     put(s, 'minecraft:oak_planks', 3)
     put(s, 'minecraft:stick', 2)
     s.command(AS + 'function npcraft:inventory/load')
