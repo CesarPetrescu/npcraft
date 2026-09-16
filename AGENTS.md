@@ -19,3 +19,12 @@ Do not add proprietary Marketplace material or copy a third-party GPL pathfinder
 without an explicit licensing decision. Do not introduce an LLM to replace
 movement/tool/action validation. Update documentation when implementation differs
 from a proposed feature. Work on a branch and open a PR; do not force-push main.
+
+## 0.2 invariants
+Read docs/AGENT_FOUNDATIONS.md as the current extension contract. The backpack is
+36 total slots, not 45. Transactions modify command-storage snapshots before one
+commit. Preserve the legacy timber tool/cargo during lazy additive initialization.
+Public actions are finite; status/menu/unknown requests must not reset pending work.
+Navigation is full-block grid +1/-1/-2, not continuous physics. Keep movement free
+of terrain edits. Run both graphical scenarios and all real-server agent cases.
+Never label the finite stone-pickaxe dependency controller general GOAP or PvP AI.

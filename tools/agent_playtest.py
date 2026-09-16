@@ -97,7 +97,8 @@ def run(args):
             client.key('Escape')
             c(f'item replace entity {PLAYER} weapon.mainhand with minecraft:diamond[minecraft:custom_name={{text:"Backpack QA"}}] 20')
             c(f'data modify storage npcraft:gui original_stack set from entity {PLAYER} SelectedItem')
-            client.chat('/trigger npcraft set 21')
+            client.chat('/trigger npcraft set 20')
+            client.click(490, 270)  # Give held stack in the real native agent dialog.
             check('give_stack_removes_player_source', f'if items entity {PLAYER} weapon.mainhand minecraft:diamond', False)
             check('backpack_preserves_stack_count', f'if data entity {BOT} data.inventory.slots[0].item{{id:"minecraft:diamond",count:20}}')
             c(f'data modify storage npcraft:gui copied_stack set from entity {BOT} data.inventory.slots[0].item')
@@ -117,7 +118,8 @@ def run(args):
             client.key('F1')
             client.shot('02-empty-handed-goal-fixture')
             client.key('F1')
-            client.chat('/trigger npcraft set 23')
+            client.chat('/trigger npcraft set 20')
+            client.click(490, 315)  # Goal: stone pickaxe.
             check('goal_request_accepted', f'if score {BOT} np.mode matches 4')
             seen = set()
             deadline = time.monotonic() + 120
@@ -139,6 +141,7 @@ def run(args):
             result['completed_inventory'] = c(f'data get entity {BOT} data.inventory')
             c(f'execute at {BOT} run tp {PLAYER} ~3 ~ ~4 143 5')
             client.key('F1')
+            check('strongest_crafted_tool_displayed', 'if items entity @e[tag=npcraft.body,limit=1] weapon.mainhand minecraft:stone_pickaxe')
             client.shot('03-crafted-stone-pickaxe')
             client.key('F1')
             time.sleep(2)
@@ -158,9 +161,11 @@ def run(args):
             else:
                 raise AssertionError('Vertical follow failed: ' + c(f'data get entity {BOT} Pos'))
             check('follow_climbs_three_full_block_steps', 'if entity @e[tag=npcraft.bot,x=12.5,y=67,z=0.5,distance=..2.1]')
+            c(f'execute store result score #gui_height np.tmp run data get entity {BOT} Pos[1]')
+            check('agent_reaches_platform_height', 'if score #gui_height np.tmp matches 67')
             check('navigation_preserved_stair_blocks', 'if block 8 64 0 minecraft:stone_bricks if block 9 65 0 minecraft:stone_bricks if block 10 66 0 minecraft:stone_bricks')
             client.chat('/trigger npcraft set 5')
-            c(f'execute at {BOT} run tp {PLAYER} ~4 ~ ~4 135 5')
+            c(f'tp {PLAYER} 16.5 67 4.5 130 5')  # Camera stands on the platform, not beyond its edge.
             client.key('F1')
             client.shot('04-vertical-follow-platform')
             client.key('F1')

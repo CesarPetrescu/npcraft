@@ -253,4 +253,27 @@ def test_agent_additive_initialization_preserves_legacy(s):
     s.expect(f'if data entity {BOT} data.inventory.slots[0].item{{count:3}}')
 
 
+def test_agent_best_tool_and_legacy_display(s):
+    put(s, 'minecraft:stone_pickaxe', 1, 1, {'minecraft:damage': 0})
+    put(s, 'minecraft:wooden_pickaxe', 1, 1, {'minecraft:damage': 3})
+    s.command(AS + 'function npcraft:inventory/load')
+    s.command(AS + 'function npcraft:inventory/find_pick')
+    s.expect('if score #pick_slot np.tmp matches 0')
+    s.command(f'scoreboard players set {BOT} np.mode 4')
+    s.command(AS + 'function npcraft:agent/complete')
+    s.command(AS + 'function npcraft:bot/sync with entity @s data')
+    s.expect('if items entity @e[tag=npcraft.body,limit=1] weapon.mainhand minecraft:stone_pickaxe')
+    s.expect(f'if data entity {BOT} data.tool{{id:"minecraft:iron_axe"}}')
+
+
+def test_agent_unsupported_tool_does_not_satisfy_mining_prerequisite(s):
+    put(s, 'minecraft:wooden_pickaxe', 1, 1, {'minecraft:custom_name': 'Stored but not emulated'})
+    put(s, 'minecraft:oak_planks', 3)
+    put(s, 'minecraft:stick', 2)
+    s.command(AS + 'function npcraft:inventory/load')
+    s.command(AS + 'function npcraft:agent/observe')
+    s.command(AS + 'function npcraft:agent/plan')
+    s.expect(f'if data entity {BOT} data.agent{{intent:"craft_wood_pick"}}')
+
+
 AGENT_TESTS = [value for name, value in sorted(globals().items()) if name.startswith('test_agent_')]

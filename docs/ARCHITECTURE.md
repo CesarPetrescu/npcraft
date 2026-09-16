@@ -1,112 +1,81 @@
 # Architecture
 
 ```text
-G / pause-menu dialog / trigger
-            |
-player init -> approval + Overworld + command-range checks
-            |
-owner ID + stored UUID validation
-            |
-persistent marker controller (authoritative data and scores)
-            |
-fair saved queue: ONE allocated record selected per server tick
-            |
-owner nearby? -> cooldown -> mode dispatcher
-            |
-follow / home / timber -> bounded navigation -> validated action
-            |
+Actual player trigger / native dialog
+           |
+approval + dimension + range + owner ID and UUID
+           |
+persistent marker controller
+           |
+fair queue: one allocated record selected per server tick
+           |
+approved owner nearby? -> cooldown -> selected mode
+           |
+follow / home / legacy timber / agent goal
+           |
+bounded navigation + validated world/inventory actions
+           |
 mannequin presentation sync
 ```
 
-## Persistent data
+## Authoritative state
 
-Each controller is a `minecraft:marker` tagged `npcraft.bot`. Marker `data` is used
-because arbitrary custom fields on a mannequin are not a reliable persistence
-mechanism. A `minecraft:mannequin` tagged `npcraft.body` shares its `np.id`.
+`minecraft:marker` with tag `npcraft.bot` holds custom `data` and controller scores.
+A `minecraft:mannequin` with tag `npcraft.body` shares its `np.id`. The mannequin is
+an invulnerable cosmetic body, not an authenticated player and not an item store.
 
-Marker record:
+Core marker record: schema, stable companion ID, numeric owner ID, full owner UUID,
+home/work-plot/output-container coordinates, navigation destination, target and scan
+cursor. Legacy timber tool and cargo remain in `data.tool`/`data.cargo`.
 
-```text
-data.schema      = 1
-data.id          = monotonically allocated companion ID
-data.owner       = monotonically allocated player ID
-data.owner_uuid  = full UUID int array copied from the player
-data.home        = {x, y, z}, integer block coordinates
-data.plot        = optional {x, y, z} center / ground level
-data.storage     = optional {x, y, z} output barrel position
-data.tool        = optional complete iron-axe item stack
-data.cargo       = optional {id, count}, supported plain log only
-data.target      = optional {x, y, z, kind}
-data.dest        = {x, y, z, range}, navigation request
-data.scan        = next index in the 196-cell plot scan
-data.scanned     = cells examined since the last target, saturated at 196
-```
+0.2 adds `data.inventory={version:1,slots:[36 entries]}` and `data.agent` with goal,
+intent, state, reason, observation snapshot, assigned workbench, display item, and
+bounded failed-target memory. [Detailed agent contract](AGENT_FOUNDATIONS.md).
 
-Players keep `np.owner`, `np.sel`, `np.count` and the `npcraft` trigger. Controllers
-keep `np.id`, `np.owner`, `np.mode`, `np.status`, `np.next`, `np.dig`, `np.harvest`.
-Scores and marker records persist with the world. IDs are never based on “nearest
-player,” never recycled on reload, and never inferred from a display name.
+Scoreboards keep player identity/selection/allocation counts and controller
+mode/status/cooldown/cut deadlines. `npcraft:state queue` is a saved list of `{id}`
+records. The scheduler rotates one head record per tick and processes it only when
+its marker is loaded and its approved owner is nearby in the Overworld. Unloaded
+allocations are not deleted or omitted from allocation limits.
 
-`npcraft:state queue` is a list of `{id}` records, including unloaded allocations.
-The scheduler copies the first entry, appends it, removes the original and
-processes that ID only if its controller is loaded. This prevents starvation by a
-fixed selector order and prevents unloaded records from resetting allocation caps.
+Initialization is gated by persistent metadata; reload does not zero IDs, items or
+pause state. Agent records are initialized lazily and additively. No entity is
+reclaimed merely because it cannot be found in loaded chunks.
 
-`npcraft:meta` stores schema, version and installation state. `np.sys` fake players
-hold counters and the pause flag. Installation is gated by persistent metadata;
-reload does not zero anything. Incompatible schema values fail closed.
+## Scratch-state execution contract
 
-## Temporary state and execution boundaries
+Command storage and `#... np.tmp` scores are shared scratch. Every function chain
+is synchronous, and only one autonomous controller chain is entered per tick.
+Player requests are processed serially. Do not add scheduled continuations,
+asynchronous work or nested autonomous dispatch without redesigning this contract.
 
-Scratch storage and `#... np.tmp` scores are deliberately global. Minecraft runs
-each function chain synchronously; only one controller's autonomous work chain is
-entered per tick. Player requests are also processed serially. Do not add scheduled
-callbacks, asynchronous work, nested work dispatch, or uncontrolled parallel
-selection without first replacing the scratch-state contract.
-
-Temporary BFS markers use `npcraft.nav`; they are removed at the end of each plan
-and on load. No long-lived force-loaded pathfinding workspace is used. The direct
-block/world checks operate in the current loaded dimension, supported only in the
-Overworld. Scheduler macro values are server-written IDs, never arbitrary user text.
+Inventory operations snapshot authoritative slots, stage modifications, then commit
+once all ingredient/capacity checks and external transfers succeed. Production
+mutations are tightly restricted: only validated harvest commits remove blocks.
+Crafting/drop transfers must not commit a partly modified snapshot on failure.
+This is logical atomicity, not crash-proof persistence across separate save files.
 
 ## Navigation contract
 
-A breadth-first local search visits at most **128** cardinal cells within a
-six-block radius. Nodes retain the first step from the root, not a whole path.
-The first safe step is revalidated before movement. Targets farther than the local
-radius may use the explored frontier with strictly lower Manhattan distance.
-This is not a globally complete planner; concave obstacles can produce a safe stop.
+Local BFS uses at most 128 temporary nodes within a six-block sphere. Each node
+retains its first step. Cardinal walk, +1 full-block ascent and -1/-2 descents are
+considered only with support and body clearance. The actual chosen step is checked
+again immediately before movement, including overhead/drop-column sweeps. No
+navigation block edits, chunk force-loading, swimming or rescue wall teleport.
 
-Each candidate requires loaded chunks, a full supported floor, and clear feet/head
-cells. Only a single height is supported. Navigation contains no block mutations.
-The body teleports between grid cells; smooth interpolation and vertical swept
-collision tests are intentionally not claimed.
+Far goals use a strictly improving explored frontier with Manhattan distance in
+X/Y/Z. This is not a globally complete planner. Movement remains grid-stepped, not
+continuous physics; complex terrain may safely stop it. Temporary `npcraft.nav`
+markers are removed at the end of each synchronous plan and on load.
 
-## Timber transaction
+## Ownership and lifetime
 
-Scan at most eight of the 196 plot positions per controller visit. Select only
-ordinary oak/birch logs. Before cutting, validate the target still exists, bounds,
-empty/matching cargo capacity, tool presence, reach and a quarter-block sampled
-line of sight. Cutting takes at least 20 game ticks and can be cancelled by an order.
+Public actions come from a finite trigger table. UI visibility is not authorization:
+commands require approval, distance, owner ID and UUID checks. Read-only panel/status
+requests and unknown action IDs do not invalidate work. Returns create public drops.
 
-At commit: revalidate type/bounds/capacity/tool; remove the block without destroy
-loot; only on successful removal credit the one supported log; increment tool
-damage once; remove an exhausted axe; invalidate the pending target. Two workers
-cannot harvest the same now-removed block successfully.
-
-This is a synchronous logical transaction, **not a crash-proof database transaction**.
-A process/power failure between world-region and scoreboard/entity saves can still
-cause inconsistent snapshots. Backups and clean server shutdowns remain necessary.
-
-A barrel transfer selects an empty slot, revalidates it, writes the supported cargo,
-checks success, then removes cargo from the record. Existing stacks are not merged
-or overwritten. Dismissal drops real inventory, clears the mannequin's display
-copy, removes the queue entry and only then deletes the controller.
-
-## Security boundary
-
-The public API is a finite trigger action table. UI actions send no operator
-commands and no arbitrary function names. Approved users are trusted regarding
-land designation: vanilla command execution does not automatically honor external
-claim plugins. Operators can directly invoke internal functions or alter NBT;
-protecting a world from its own operators is outside the security model.
+Dismissal returns backpack and legacy items first, aborts if any transfer failed,
+retires the cosmetic body after clearing its display copy, removes the queue entry,
+then deletes the controller. Operators who manually alter NBT/scores or copy display
+equipment are outside the security model. External claim-plugin permissions are
+not automatically enforced by vanilla datapack commands.

@@ -1,69 +1,50 @@
 # Scope and acceptance criteria
 
-## Product goal
+## 0.2.0-alpha.1
 
-Make a small group of useful, controllable Java companions—not fake connected
-players and not “generative AI.” Explicit ownership, designated work areas,
-conserved resources and recoverable failures take priority over feature count.
+Build useful vanilla companions with explicit ownership, permitted work areas,
+resource conservation and safe failure behavior. This milestone is a bounded
+agent foundation, **not a full survival or PvP player**.
 
-## 0.1.0-alpha.1: implemented vertical slice
+The original timber worker remains: oak/birch logs in a 7 x 7 x 4 plot, given iron
+axe, single-type legacy cargo and empty-slot barrel deposits. New agent mode adds a
+36-slot full-component backpack, validated mine/craft actions, a finite stone-pickaxe
+prerequisite goal, expiring failed-target memory and full-block vertical navigation.
 
-The code implements a mannequin presentation layer over persistent marker records,
-operator approval, owner-checked trigger controls, native dialogs, a fair one-record
-per-tick scheduler, bounded flat-ground navigation, and an oak/birch timber job.
-The README is the player-facing feature contract. CI is the executable gate for
-these implementations; visual/client usability is a separate manual requirement.
+The goal starts with an empty backpack/no mining tool, given an allowed plot with
+logs and exposed stone plus a reachable real assigned crafting table. It obtains
+a wooden pick, mines three cobblestone, then crafts a stone pick with actual input
+consumption. It does not construct its own table or discover arbitrary recipes.
 
-### Hard constraints
+Navigation supports cardinal full-block walking, one-block ascent, and one/two-block
+descent. It remains grid-stepped. It never grants permission to break/place blocks,
+load chunks, jump unsafe gaps or ignore overhead/landing clearance.
 
-- Pure vanilla datapack; no client mod, mandatory resource pack or external AI.
-- Exact Minecraft 26.3 target, pack format 121.0; no untested compatibility claims.
-- No copied Gamemode One assets/code, no bundled GPL pathfinding dependency.
-- No navigation-driven block destruction, block placement or forced chunk loading.
-- Only an approved owner can issue player-facing mutations. UUID and numeric owner
-  checks are both required; menu visibility is not authorization.
-- All world mutation must revalidate plot bounds and target type. All item transfer
-  must confirm success before removing the source record.
-- Pause when the owner is offline, revoked, outside 64 blocks, or in another dimension.
+## Hard boundaries
 
-### Actual gameplay boundaries
+- Vanilla Java 26.3 / pack format 121.0; no speculative version compatibility.
+- Original code, no paid Marketplace assets or copied third-party pathfinder.
+- Operator approval, numeric owner plus UUID authorization and distance checks.
+- Stop autonomous work without an approved nearby owner in the Overworld.
+- Revalidate action bounds, target, reach, tool, ingredients and inventory capacity.
+- Commit item changes only after all checks and external transfer successes.
+- Preserve existing schema-1 ownership, tool/cargo and allocation state on upgrade.
 
-Movement is at a single integer Y level, centered on full-block cells. Two air-like
-body cells and a conservative support-block allowlist are required. Navigation is
-cardinal, grid-stepped, not a general physics/collision engine. It cannot step over
-slabs, jump, climb stairs, swim, open doors, or cross portals. Far-goal frontier
-selection can stall at complex concave obstacles; it must stop rather than dig.
+## Acceptance evidence
 
-A timber plot is X/Z ±3, Y +0..+3. All ordinary oak/birch logs inside are eligible,
-including player-placed logs. Leaves, saplings, other log species, stripped logs and
-logs above the plot are untouched. The supported plain-log yield is explicitly
-one log per successful removal; overridden loot tables are not evaluated. No
-replanting, general tree recognition, self-crafted tools or autonomous progression.
+Require structural/unit checks, actual vanilla-server regression tests, and both
+unmodified-client GUI scenarios. Tests must check positive progress and negative
+cases: insufficient capacity/ingredients, missing workbench, unsafe movement,
+blocked targets, stale data, unauthorized requests, cancellation, reload and full
+process restart. The complete resource balance is in [AGENT_FOUNDATIONS.md](AGENT_FOUNDATIONS.md).
 
-The inventory is one stack (at most 64 logs of one species) plus a real iron axe.
-The axe must be unenchanted, breakable and have standard 250 durability. Custom
-name and existing damage are preserved. General enchanted-tool semantics are not
-implemented. Barrels are explicitly assigned; only empty slots are written.
+Runtime tests are not a percentage of all Minecraft behavior. Screenshots are not
+performance measurements. Both success and remaining unsupported cases must be
+reported. Keep releases experimental until broader playtesting is recorded.
 
-Mannequin bodies are invulnerable and their held axe is a presentation copy.
-Normal survival combat/death and arbitrary armor/inventory management are out of
-scope until accounting and recovery can be redesigned and tested for death.
+## Not delivered
 
-## Definition of done for this alpha
-
-CI must parse the pack in the exact vanilla server, reject broken function/resource
-loads and expanded macros, and pass behavioral assertions for navigation, hazards,
-plot bounds, timed cutting, axe wear, stale targets, stack limits, blocked storage,
-authorization rejection, queue rotation, reload and restart persistence. The ZIP
-must be deterministic, directly installable and contain no development/server data.
-
-A release candidate also requires a recorded manual client session for dialogs,
-selection, visual movement, non-operator tool transfers and two-player ownership.
-Headless tests do not certify these client-facing behaviors or production capacity.
-
-## Deferred, not silently promised
-
-See ROADMAP.md for smooth/vertical movement, robust multi-slot inventory, resource
-progression, forestry, combat/death, dimensions, mounts and blueprint construction.
-Twenty companions is a future measured capacity goal, not an inherited requirement
-from a different add-on's marketing.
+Independent offline rivals, health/hunger/death recovery, PvP/combat, ore/smelting
+progression, general recipe planning, inventory GUI/equipment parity, natural cave
+exploration, swimming/slabs/stair-shaped blocks, doors/mounts/portals, autonomous base
+building and general long-term world/opponent memory. See [ROADMAP.md](ROADMAP.md).
