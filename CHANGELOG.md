@@ -7,6 +7,7 @@ finite recipes and a real workbench; validated barehand oak / pickaxe stone acti
 empty-inventory stone-kit dependency planning, retry memory and lost-tool replanning.
 Add conservative one-full-block up/down navigation with transition revalidation.
 Keep legacy tools/cargo, owners, IDs, queue and approval unchanged.
+Read-only menu/status requests no longer cancel pending work or reset deadlines.
 
 New exact-vanilla acceptance fixtures and actual graphical-client progression tests,
 genuine screenshots, generator drift tests and required graphical CI. Bodies remain

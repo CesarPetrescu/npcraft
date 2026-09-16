@@ -52,4 +52,22 @@ def test_replans_lost_sword(s):
     s.expect(f'if data entity {BOT} data.agent{{mined:21}}')
 
 
+def test_readonly_queries_preserve_work(s):
+    target(s)
+    s.command(AS+'data modify entity @s data.target set from entity @s data.agent.target')
+    s.command(f'scoreboard players set {BOT} np.dig 1060')
+    s.command(f'scoreboard players set {BOT} np.next 1080')
+    for action in (12,13,20,24):
+        s.command(f'scoreboard players set #cmd np.tmp {action}')
+        s.command(AS+'function npcraft:commands/owned')
+        s.expect(f'if score {BOT} np.dig matches 1060')
+        s.expect(f'if score {BOT} np.next matches 1080')
+        s.expect(f'if data entity {BOT} data.target{{x:1,y:64,z:0}}')
+        s.expect(f'if data entity {BOT} data.agent.target{{x:1,y:64,z:0}}')
+    s.command('scoreboard players set #cmd np.tmp 25')
+    s.command(AS+'function npcraft:commands/owned')
+    s.expect(f'if score {BOT} np.dig matches 0')
+    s.expect(f'if data entity {BOT} data.agent.target',False)
+
+
 TESTS=[value for name,value in list(globals().items()) if name.startswith('test_') and callable(value)]

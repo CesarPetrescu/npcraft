@@ -90,7 +90,7 @@ occur; invalid command resources, macro errors and serialization errors are fail
 
 ## Test and implementation boundaries
 
-The new server suite includes 34 scenarios for inventories, rollback, recipes,
+The new server suite includes 35 scenarios for inventories, rollback, recipes,
 station requirements, mining permissions, breakage, step safety, recovery, memory
 and persistence. The existing 22 vanilla scenarios and the existing two-client
 worker/ownership graphical suite remain part of CI. The final committed revision's

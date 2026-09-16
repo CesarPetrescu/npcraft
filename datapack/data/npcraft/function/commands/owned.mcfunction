@@ -15,7 +15,11 @@ execute if score #cmd np.tmp matches 16 run function npcraft:commands/drop_cargo
 execute if score #cmd np.tmp matches 20..25 run function npcraft:agent/commands
 execute if score #cmd np.tmp matches 4..11 if data entity @s data.agent run function npcraft:agent/invalidate
 execute if score #cmd np.tmp matches 99 run return run function npcraft:commands/dismiss with entity @s data
-# Orders invalidate pending harvests. Revalidation is mandatory after any change.
+# Read-only views must not reset work deadlines or discard an in-flight target.
+execute if score #cmd np.tmp matches 12..13 run return 0
+execute if score #cmd np.tmp matches 20 run return 0
+execute if score #cmd np.tmp matches 24 run return 0
+# Behavior/inventory changes invalidate pending harvests and wake the controller.
 data remove entity @s data.target
 scoreboard players set @s np.dig 0
 scoreboard players set @s np.next 0
