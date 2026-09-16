@@ -25,6 +25,7 @@ jobs:
       - name: Generate reviewed feature sources
         run: |
           python tools/apply_agent_stage.py
+          python tools/fix_agent_runtime.py
           python tools/generate_agent.py
           python tools/validate.py
           python -m unittest discover -s tests -v
@@ -60,6 +61,7 @@ jobs:
       - run: |
           test "$(git rev-parse HEAD)" = "${{ github.sha }}"
           python tools/apply_agent_stage.py
+          python tools/fix_agent_runtime.py
           python tools/generate_agent.py
           git add datapack project.json tools
           git diff --cached --quiet && exit 0
