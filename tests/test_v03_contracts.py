@@ -43,7 +43,7 @@ class V03Contracts(unittest.TestCase):
         self.assertIn('npcraft_visual',self.text('runtime/tick.mcfunction'))
     def test_release_reuses_full_ci(self):
         ci=(ROOT/'.github/workflows/ci.yml').read_text()
-        self.assertIn('needs: [quality, vanilla, visual]',ci)
+        self.assertIn('needs: [quality, vanilla, visual, soak]',ci)
         self.assertIn('uses: ./.github/workflows/client-playtest.yml',ci)
         self.assertIn('uses: ./.github/workflows/ci.yml',(ROOT/'.github/workflows/release.yml').read_text())
     def test_maintained_test_workflows_have_no_write_permission(self):
