@@ -37,7 +37,9 @@ def test_agent_inventory_component_merge(s):
 def test_agent_inventory_capacity_rollback(s):
     s.command(AS + 'function npcraft:agent/init')
     slots = [{'item': {'id': 'minecraft:stone', 'count': 63 if i == 0 else 64}, 'max': 64} for i in range(36)]
-    s.command(AS + 'data modify entity @s data.inventory.slots set value ' + json.dumps(slots))
+    # Keep each fixture command below the vanilla RCON request buffer.
+    for index, slot in enumerate(slots):
+        s.command(AS + f'data modify entity @s data.inventory.slots[{index}] set value ' + json.dumps(slot))
     s.command(AS + 'function npcraft:inventory/load')
     s.command('data modify storage npcraft:inv input set value {item:{id:"minecraft:stone",count:2},max:64}')
     s.command(AS + 'function npcraft:inventory/insert')
@@ -223,6 +225,32 @@ def test_agent_goal_end_to_end(s):
     for _ in range(5):
         s.command(AS + 'function npcraft:agent/tick')
     s.expect(f'if score {BOT} np.harvest matches 5')
+
+
+def test_agent_read_only_and_unknown_commands(s):
+    target(s, kind='oak_log')
+    s.command(f'scoreboard players set {BOT} np.dig 12345')
+    s.command(f'scoreboard players set {BOT} np.mode 4')
+    for action in (13, 20, 25, 19, 26, 98):
+        s.command(f'scoreboard players set #cmd np.tmp {action}')
+        s.command(AS + 'function npcraft:commands/owned')
+        s.expect(f'if data entity {BOT} data.target{{x:1,y:64,z:0}}')
+        s.expect(f'if score {BOT} np.dig matches 12345')
+        s.expect(f'if score {BOT} np.mode matches 4')
+
+
+def test_agent_additive_initialization_preserves_legacy(s):
+    before = s.command(f'data get entity {BOT} data.tool')
+    s.command(AS + 'data modify entity @s data.cargo set value {id:"minecraft:oak_log",count:31}')
+    for _ in range(3):
+        s.command(AS + 'function npcraft:agent/init')
+    s.expect(f'if data entity {BOT} data.cargo{{count:31}}')
+    s.expect(f'if data entity {BOT} data{{owner_uuid:[I;0,0,0,1]}}')
+    if before != s.command(f'data get entity {BOT} data.tool'):
+        raise AssertionError('Agent initialization changed the legacy tool')
+    put(s, 'minecraft:diamond', 3)
+    s.command(AS + 'function npcraft:agent/init')
+    s.expect(f'if data entity {BOT} data.inventory.slots[0].item{{count:3}}')
 
 
 AGENT_TESTS = [value for name, value in sorted(globals().items()) if name.startswith('test_agent_')]
