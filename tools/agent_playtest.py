@@ -48,10 +48,13 @@ def run(args):
             server.expect(condition)
         def frame(name):
             server.command('tick freeze')
+            server.command(f'gamemode spectator {PLAYER}')
             try:
-                server.command(f'execute at {BOT} run tp {PLAYER} ~3 ~ ~3 135 8')
+                server.command(f'execute at {BOT} run tp {PLAYER} ~4 ~2 ~4 135 25')
                 client.key('F1');client.shot(name);client.key('F1')
-            finally:server.command('tick unfreeze')
+            finally:
+                server.command(f'gamemode creative {PLAYER}')
+                server.command('tick unfreeze')
         try:
             server.start();c=server.command
             c('forceload add -32 -32 32 32');time.sleep(3)
@@ -89,9 +92,9 @@ def run(args):
             c(f'tp {PLAYER} 5.5 64 6.5 135 5')
             client.chat('/trigger npcraft set 20')
             check('new_bag_starts_empty',f'if data entity {BOT} data.agent.bag[].item',False)
-            client.shot('01-agent-management-panel');client.key('Escape')
+            client.shot('01-agent-management-panel')
             # The only instruction: work toward the kit. No resource/tool gifts follow.
-            client.chat('/trigger npcraft set 21')
+            client.click(490,254)  # Actual Build stone kit dialog button at GUI scale 2.
             check('autonomy_enabled_from_client',f'if score {BOT} np.mode matches 4')
             wait(f'if data entity {BOT} data.agent.bag[{{item:{{id:"minecraft:wooden_pickaxe"}}}}]',120)
             check('wooden_pickaxe_crafted_without_gift',f'if data entity {BOT} data.agent.bag[{{item:{{id:"minecraft:wooden_pickaxe"}}}}]')
@@ -118,6 +121,7 @@ def run(args):
             check('backpack_drained_without_duplicate',f'if data entity {BOT} data.agent.bag[].item',False)
             for item in ('stone_pickaxe','stone_sword','stone_axe','furnace'):
                 check('returned_'+item,f'if data entity {PLAYER} Inventory[{{id:"minecraft:{item}"}}]')
+            c(f'tp {PLAYER} 6.5 64 5.5 135 8')
             c(f'gamemode survival {PLAYER}')
             client.key('e');client.shot('04-produced-items-in-player-inventory');client.key('Escape')
             # Store a component-bearing stack through the new public inventory command.
