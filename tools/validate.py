@@ -90,7 +90,7 @@ def validate(root: Path = ROOT) -> list[str]:
                         errors.append(f"Forbidden production command: {where}")
                     if "/nav/" in relative and re.search(r"\b(?:setblock|fill|clone)\b", line):
                         errors.append(f"Navigation may not mutate blocks: {where}")
-                    if re.search(r"\bsetblock\b", line) and not relative.endswith("/work/commit.mcfunction"):
+                    if re.search(r"\bsetblock\b", line) and not relative.endswith(("/work/commit.mcfunction", "/actions/mine_commit.mcfunction")):
                         errors.append(f"Block mutation outside harvest commit: {where}")
         except (OSError, UnicodeError, ValueError, TypeError) as exc:
             errors.append(f"{relative}: {exc}")

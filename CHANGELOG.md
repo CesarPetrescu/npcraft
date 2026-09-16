@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0-alpha.1 — unreleased
+
+Additive 36-slot full-component backpack with transactional transfers and recipes;
+closed validated mining/crafting actions; finite autonomous stone-pickaxe goal;
+short-lived failed-target memory; one-block up/two-block down grid traversal with
+swept clearance checks; owner controls and cancellation; expanded vanilla and
+graphical-client acceptance tests. Legacy timber workflow remains supported.
+
+No general survival/PvP, continuous movement, unrestricted mining or general recipe
+discovery is claimed. See docs/AGENT_FOUNDATIONS.md and the executed CI evidence.
+
 ## 0.1.0-alpha.1 — unreleased
 
 Initial original vanilla datapack implementation: mannequin companions; persistent

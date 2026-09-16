@@ -1,0 +1,60 @@
+{
+  "type": "minecraft:multi_action",
+  "title": "NPCraft | Agent foundations",
+  "pause": false,
+  "columns": 2,
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 350,
+      "contents": "Experimental: assign a work plot with logs and exposed stone, plus a reachable real crafting table. Then choose the stone-pickaxe goal. A 36-slot backpack preserves full item data; Return drops items publicly. Movement supports full-block steps, not swimming or parkour."
+    }
+  ],
+  "actions": [
+    {
+      "label": "Give held stack",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 21"
+      }
+    },
+    {
+      "label": "Return backpack (drop)",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 22"
+      }
+    },
+    {
+      "label": "Goal: stone pickaxe",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 23"
+      }
+    },
+    {
+      "label": "Set table beneath me",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 24"
+      }
+    },
+    {
+      "label": "Agent / backpack status",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 25"
+      }
+    },
+    {
+      "label": "Stop agent",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 11"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": "Close"
+  }
+}

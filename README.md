@@ -1,139 +1,161 @@
 # NPCraft
 
 [![CI](https://github.com/CesarPetrescu/npcraft/actions/workflows/ci.yml/badge.svg)](https://github.com/CesarPetrescu/npcraft/actions/workflows/ci.yml)
+[![Graphical playtest](https://github.com/CesarPetrescu/npcraft/actions/workflows/client-playtest.yml/badge.svg)](https://github.com/CesarPetrescu/npcraft/actions/workflows/client-playtest.yml)
 
-**Controllable Minecraft Java companions that respect explicit work boundaries.**
+**Controllable vanilla Minecraft companions with resource-accounted autonomous goals.**
 
-NPCraft is an original, server-side datapack: player-shaped mannequin companions,
-owner-checked controls, bounded navigation, and a resource-accounted timber job.
-No client mod, resource pack, external service, or language model is required.
-It is not a port of Gamemode One's Marketplace assets or code.
-
-> **0.1.0-alpha.1 — experimental vertical slice, not production-ready.**
-> Use a new test world or a backup. Bodies are deliberately invulnerable in this
-> release. Movement is flat-ground, cardinal, grid-stepped navigation—not smooth
-> player locomotion. “Timber job” means bounded oak/birch log harvesting, not a
-> complete autonomous forestry/survival system.
-
-## See it in Minecraft
-
-![NPCraft companion in the actual Minecraft Java client](docs/screenshots/01-companion-in-world.png)
-
-The [graphical playtest and seven-screenshot gallery](docs/CLIENT_PLAYTEST.md)
-records **27 passing client acceptance checks**, including actual native-menu
-clicks, a complete 16-log harvest/deposit, exact axe wear, and two-client ownership
-isolation. These are captures from the unmodified vanilla client in a disclosed
-local test fixture, not generated illustrations. The alpha's gameplay limitations
-below still apply.
+> **0.2.0-alpha.1 — experimental. Use a backup or a disposable world.**
+> This is a worker/agent foundation, not a complete survival player or PvP opponent.
+> Bodies are invulnerable; movement is grid-stepped. No client mod, mandatory
+> resource pack, language model or external AI service is needed.
 
 ## Compatibility
 
 | Component | Target |
 |---|---|
-| Minecraft | **Java Edition 26.3**, vanilla server or singleplayer |
-| Datapack format | **121.0**, exact target, no speculative compatibility range |
-| Server Java | **25 or newer** |
-| Development tools | Python **3.13**, standard library only |
-| Client additions | None |
+| Game | Minecraft **Java 26.3**, vanilla |
+| Datapack | **121.0**, exact tested target |
+| Server runtime | Java **25+** |
+| Build/tests | Python **3.13**, standard library |
+| Optional graphical tests | Linux, Xvfb/Mesa, xdotool, ImageMagick |
 
-Older releases, Bedrock, Paper/Fabric behavior, Realms deployment, and future Java
-versions are not claimed as tested. See [version sources](docs/SOURCES.md).
+See [primary version references](docs/SOURCES.md). Editing pack.mcmeta is not proof
+of compatibility with another game version. Bedrock, Paper/Fabric-specific behavior
+and Realms are not certified.
 
-## What is implemented
+## What is here
 
-| Area | This alpha |
+| System | Implemented behavior |
 |---|---|
-| Management | Recruit, select nearest owned companion, follow, stay, home, stop, status, dismiss |
-| UI | Native **G / Quick Actions** and pause-menu dialog; `/trigger` fallback |
-| Authorization | Operator approval, owner ID **and player UUID** checks, command-distance checks |
-| Navigation | Bounded breadth-first search, 128-node cap, six-block local radius, flat cardinal steps, rolling frontier steps for far goals |
-| Work | An explicitly assigned **7 × 7 × 4** plot; oak and birch logs only; timed cutting and line-of-sight checks |
-| Accounting | Give a real unenchanted iron axe; preserve its item data; wear it once per harvested log; carry up to 64 same-type logs |
-| Output | Deposit into an assigned barrel's **empty** slot; stop without losing cargo when full/missing |
-| Persistence | Marker-held records, scoreboard IDs/modes, fair persistent scheduler queue; reload-safe initialization |
-| Distribution | Deterministic installable ZIP, SHA-256 checksum, CI artifacts and tag-triggered releases |
+| Companion | Mannequin presentation, persistent marker controller, stable owner/companion IDs |
+| Controls | Recruit/select, follow/stay/home, jobs, diagnostics, inventory return and dismissal |
+| Authorization | Explicit operator approval, owner ID **plus UUID**, range checks |
+| Navigation | Bounded cardinal BFS; full-block walk, ascend one block, descend at most two; source/landing and overhead checks |
+| Timber job | Timed oak/birch harvesting inside a designated 7 x 7 x 4 plot; real iron axe and barrel deposits |
+| Agent backpack | 36 slots, complete item-stack records, exact-component merging, supported stack limits 1/16/64 |
+| Action API | Closed mine/craft actions; revalidated reach, permissions, resources and capacity; explicit outcome/reason |
+| Goal planner | An empty backpack to a stone pickaxe, choosing resource and recipe prerequisites automatically |
+| Memory/recovery | Bounded, expiring failed-target memory; backoff and owner cancellation |
+| Distribution | Deterministic installable ZIP and SHA-256; unit, vanilla-server and graphical CI |
 
-**Not implemented:** crafting/progression, mining ores, farming, replanting,
-leaf clearing, normal combat/death, armor management, boats/mounts, stairs/jumps,
-portal travel, arbitrary building, unrestricted inventory GUI, chat/LLM integration.
-The complete [scope](docs/SCOPE.md) separates these from delivered code.
+The planner is a finite dependency controller, **not general GOAP or an LLM**. The
+backpack's 36 slots already include the conceptual nine hotbar slots; it is not
+36 + 9. There is no drag-and-drop backpack screen, armor/offhand manager or hunger
+system yet. The old timber axe/cargo remain separate to preserve existing saves.
 
 ## Install
 
-Download the **inner datapack ZIP** from a successful CI run's `npcraft-datapack`
-artifact, or from a published GitHub release. The artifact download itself may be
-an outer archive containing the installable ZIP and its checksum.
-
-Put `npcraft-0.1.0-alpha.1-mc26.3.zip` in:
+Use a successful CI run's `npcraft-datapack` artifact or a published release. The
+artifact may be an outer ZIP; install the **inner** file:
 
 ```text
-<world>/datapacks/
+<world>/datapacks/npcraft-0.2.0-alpha.1-mc26.3.zip
 ```
 
-Alternatively, copy this repository's **`datapack/` directory**, renamed to
-`npcraft`, into that folder. The resulting path must be:
-
-```text
-<world>/datapacks/npcraft/pack.mcmeta
-```
-
-Do **not** install GitHub's source-code ZIP as the datapack. Run `/reload`, then
-`/datapack list enabled`. Cheats/operator permission are needed for installation.
-
-An operator must approve each user explicitly:
+Do not install GitHub's source ZIP. Alternatively copy the repository's `datapack/`
+directory so `<world>/datapacks/npcraft/pack.mcmeta` exists. In-game, as an operator:
 
 ```mcfunction
-/execute as <player> run function npcraft:admin/grant
+/reload
+/function npcraft:admin/grant
+/trigger npcraft set 1
 ```
 
-Use the player's actual Minecraft name in place of `<player>`. Normal interaction
-thereafter uses permission-zero trigger requests, not operator commands.
+The grant command approves the executing player. From a server console, approve
+someone explicitly with `execute as <player> run function npcraft:admin/grant`.
+Normal controls then use permission-zero `/trigger` requests.
 
-## First companion and first timber job
+## Autonomous stone-pickaxe demonstration
 
-1. Stand on ordinary full-block ground in the **Overworld**. Press **G**, choose
-   **Recruit companion**. The new companion is selected automatically.
-2. Use **Follow me**, **Stay**, **Set home here**, and **Return home** on a flat
-   test area. Use **Select nearest owned** when switching companions.
-3. Stand at the center of a safe timber plot and choose **Set timber plot here**.
-   This permits **every oak/birch log** at X/Z ±3 from your feet and Y +0 through
-   +3. It does **not** distinguish a tree from a building. Keep all builds outside.
-4. Place a barrel on/flush with the same walkable level, with a clear approach.
-   Stand on top of it and choose **Set barrel beneath me**. Leave empty slots.
-5. Hold a normal **unenchanted iron axe**, choose **Give held iron axe**, then
-   **Start timber job**. The axe leaves your hand; it is not copied for free.
-6. Put a few oak/birch logs inside the plot for the first test. Stay within
-   **64 blocks** while the companion works. A full load, type change, broken axe,
-   or one unsuccessful complete scan causes it to try depositing existing cargo.
+1. Recruit a companion on supported full-block ground in the Overworld. Do not
+   give it a tool or resources: it can harvest the supported logs by hand.
+2. Stand at the center of an allowed work plot and use `/trigger npcraft set 8`.
+   The plot is X/Z +/-3 from that block and Y +0..+3. **Every supported block in the
+   plot is eligible**, including player-placed building blocks. Exclude buildings.
+3. Supply a reachable **real crafting table**. Stand on it and issue
+   `/trigger npcraft set 24`. A table embedded flush with the ground makes the
+   first demonstration simple. The agent does not create its own table yet.
+4. Ensure the plot contains at least **two ordinary oak/birch logs and three
+   exposed stone/cobblestone blocks**, with clear approaches. An accessible test
+   plot is not a substitute for unlimited cave/exploration capability.
+5. Use `/trigger npcraft set 20` for the agent panel, then **Make stone pickaxe**,
+   or use `/trigger npcraft set 23`. Remain within 64 blocks.
 
-Only one log type is carried at a time. Deposits require a completely empty barrel
-slot; this release intentionally does **not** merge into existing stacks. A full
-barrel or missing route preserves the held load. **Return cargo** and **Return axe**
-drop the real items at the companion's feet; anyone nearby can pick them up.
+The controller chooses prerequisites, rather than requiring commands per step:
 
-### Controls and distances
+```text
+Gather logs -> craft planks/sticks -> craft wooden pickaxe
+            -> mine three stone blocks -> craft stone pickaxe -> finish
+```
 
-Press G again after an action. Key bindings can be changed in Minecraft controls.
-All dialog buttons have `/trigger npcraft set <number>` equivalents:
+Inputs are consumed; there is no free gear. Starting empty, the supported recipe
+chain uses two logs, produces eight planks, turns two planks into four sticks,
+uses three planks/two sticks for the wooden pick, mines three cobblestone, and
+consumes the cobblestone/two sticks for the stone pick. Three planks remain, and
+the wooden pick has three durability uses. Output stays in the backpack.
 
-| Number | Action | Number | Action |
+`/trigger npcraft set 25` shows the goal state, reason and backpack records.
+`/trigger npcraft set 11` cancels work. Opening/status controls do not restart a cut.
+To return the backpack, use `/trigger npcraft set 22`: work stops and contents are
+**public item drops at the companion**, not private delivery to your inventory.
+
+## Controls
+
+Select the nearest owned companion within **8 blocks**. Orders require the selected
+companion within **16 blocks**. Autonomous work requires the approved owner within
+**64 blocks** in the Overworld. Offline/unloaded/out-of-range workers pause; no chunks
+are force-loaded. Allocation caps are 4 per owner / 16 globally, not measured capacity.
+
+| Trigger value | Action | Trigger value | Action |
 |---:|---|---:|---|
-| 1 | Open panel | 2 | Recruit |
+| 1 | Original G/pause panel | 2 | Recruit |
 | 3 | Select nearest owned | 4 | Follow |
-| 5 | Stay | 6 | Set home at player |
-| 7 | Return home | 8 | Set timber plot |
-| 9 | Assign barrel beneath player | 10 | Start timber job |
-| 11 | Stop job | 12 | Open dismissal confirmation |
-| 13 | Status | 14 | Give held iron axe |
-| 15 | Return axe as item drop | 16 | Return cargo as item drop |
+| 5 | Stay | 6 | Set home here |
+| 7 | Return home | 8 | Set work plot here |
+| 9 | Assign barrel beneath player | 10 | Start original timber job |
+| 11 | Stop/cancel | 12 | Dismiss confirmation |
+| 13 | Original status | 14 | Give held iron axe to timber job |
+| 15 | Return timber axe | 16 | Return timber cargo |
+| 20 | Agent/backpack panel | 21 | Give held stack to backpack |
+| 22 | Stop and return backpack | 23 | Make stone pickaxe goal |
+| 24 | Assign crafting table beneath player | 25 | Agent/backpack status |
 | 99 | Confirm dismissal | | |
 
-Selection range: **8 blocks**. Orders: **16 blocks**. Work/follow requires an
-approved owner within **64 blocks**, in the same supported dimension. Maximum
-allocations: **4 per owner / 16 globally**, including unloaded companions. These
-are safety caps, **not a claim of benchmarked 16-companion performance**.
+Use `/trigger npcraft set <value>`. The existing G/pause menu is preserved; the new
+agent panel is opened using value 20. Inventory transfers support full item data,
+but **using** every stored item/enchantment in AI is not implemented. Mining picks
+are restricted to plain wooden/stone picks, with optional durability damage.
 
-## Server administration
+## Original timber worker
+
+Assign a plot (8), stand on an output barrel and assign it (9), give a normal
+unenchanted iron axe (14), then start the timber job (10). The legacy load is one
+stack of oak/birch logs; deposits use empty barrel slots, not stack merging. Full or
+missing barrels preserve cargo. This mode does not use the new backpack for output.
+
+## Safety and limitations
+
+Navigation never breaks or places blocks. It checks full-block support and two
+clear body cells, plus the swept overhead/drop column. One-block ascents and drops
+up to two blocks are supported; slabs, stair-shaped blocks, swimming, ladders,
+doors, portals, bridging and general parkour are not. Movement remains discrete,
+not a physical jump animation. Bounded search may safely stop at complex obstacles.
+
+Only operator-approved users may control companions. Approved users are trusted to
+designate permitted land: vanilla commands do not automatically honor claim plugins.
+The goal's allowed harvest set is oak/birch logs, stone and cobblestone in the plot.
+No ores, arbitrary block loot/enchantment semantics or custom recipe discovery.
+
+No health/hunger/death progression, combat/PvP, base building, unrestricted world
+memory or independent offline rivals are implemented. See [scope](docs/SCOPE.md)
+and [the next milestones](docs/ROADMAP.md), not marketing claims, for the boundary.
+
+Back up the **whole world**. Inventory transactions are synchronous logical changes,
+not crash-proof cross-region database commits. Agent state is added lazily without
+resetting existing UUIDs, timber items or counters. Do not downgrade after storing
+backpack items. Dismiss loaded companions and collect all drops before uninstalling.
+Do not use blanket `/kill`: the invisible marker owns the authoritative inventory.
 
 ```mcfunction
 /function npcraft:admin/pause
@@ -141,53 +163,36 @@ are safety caps, **not a claim of benchmarked 16-companion performance**.
 /execute as <player> run function npcraft:admin/revoke
 ```
 
-Pause/revoke preserves records and items. No chunks are force-loaded, no gamerules
-are modified, and no global player teams are replaced. A companion in an unloaded
-chunk simply does not run. Reconnect/reload does not reset ownership or counts.
-
-A vanilla datapack cannot integrate arbitrary claim/protection plugins by magic:
-**operator-approved users are trusted to designate only permitted land.** Test
-on vanilla first. Do not use blanket `/kill` commands on NPCraft entities: the
-marker owns the items, while the mannequin's axe is only a display copy.
-
-Before uninstalling, dismiss companions while their chunks are loaded and collect
-the drops. Merely deleting the ZIP leaves entities and saved state in the world;
-see [operations and limitations](docs/OPERATIONS.md).
-
-## Develop and test
+## Build, tests and evidence
 
 ```sh
 python tools/validate.py
 python -m unittest discover -s tests -v
 python tools/build.py
-```
-
-The last command writes the installable ZIP and SHA-256 file into `dist/`.
-Dependencies: Python standard library only—no `pip install` step.
-
-To test actual Minecraft commands and behavior, install Java 25+, review the
-[Minecraft EULA](https://aka.ms/MinecraftEULA), and explicitly accept it for the
-isolated test server:
-
-```sh
 python tools/server_test.py --accept-eula
 ```
 
-This downloads **the exact pinned vanilla version**, verifies Mojang's server
-size/SHA-1, binds an offline test server to **127.0.0.1**, creates a disposable
-world, and exports logs plus JUnit to `reports/`. It never opens your real world.
+The server test requires Java 25 and explicit [Minecraft EULA](https://aka.ms/MinecraftEULA)
+acceptance. It downloads the exact official server with size/hash checks and runs
+only a disposable loopback world. Graphical CI additionally runs:
 
-CI runs structural/mutation/build tests on Linux and Windows, then vanilla
-integration on Linux, including server restart. The **Required** job fails on
-failed, skipped, or cancelled prerequisites. Configure that check in GitHub branch
-protection; adding a workflow does not itself prevent an administrator merging.
+```sh
+xvfb-run -a python tools/client_playtest.py --accept-eula
+xvfb-run -a python tools/agent_playtest.py --accept-eula
+```
 
-See [testing](docs/TESTING.md), [architecture](docs/ARCHITECTURE.md),
-[roadmap](docs/ROADMAP.md), and [contribution guide](CONTRIBUTING.md).
+These use real unmodified game clients with synthetic local identities. RCON sets
+up disclosed fixtures and checks state; player requests originate from GUI input.
+Logs/results/captures are artifacts. A successful automated scenario is not a claim
+of a human survival playthrough or production performance.
 
-## License and attribution
+[Agent design and test contract](docs/AGENT_FOUNDATIONS.md) ·
+[Earlier two-client gallery](docs/CLIENT_PLAYTEST.md) ·
+[Architecture](docs/ARCHITECTURE.md) · [Operations](docs/OPERATIONS.md) ·
+[Testing](docs/TESTING.md) · [Contribution guide](CONTRIBUTING.md)
 
-Original NPCraft code is MIT licensed. No Marketplace assets, paid add-on code,
-third-party pathfinding implementation, Minecraft server binary, or texture is
-redistributed. Not an official Minecraft product; not approved by or associated
-with Mojang or Microsoft.
+## License
+
+Original code is MIT. No paid Marketplace code/assets or third-party pathfinder is
+copied. No Minecraft binaries, textures, accounts or credentials are redistributed.
+Not an official Minecraft product; not approved by or associated with Mojang/Microsoft.
