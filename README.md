@@ -15,6 +15,17 @@ It is not a port of Gamemode One's Marketplace assets or code.
 > player locomotion. “Timber job” means bounded oak/birch log harvesting, not a
 > complete autonomous forestry/survival system.
 
+## See it in Minecraft
+
+![NPCraft companion in the actual Minecraft Java client](docs/screenshots/01-companion-in-world.png)
+
+The [graphical playtest and seven-screenshot gallery](docs/CLIENT_PLAYTEST.md)
+records **27 passing client acceptance checks**, including actual native-menu
+clicks, a complete 16-log harvest/deposit, exact axe wear, and two-client ownership
+isolation. These are captures from the unmodified vanilla client in a disclosed
+local test fixture, not generated illustrations. The alpha's gameplay limitations
+below still apply.
+
 ## Compatibility
 
 | Component | Target |
