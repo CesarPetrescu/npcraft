@@ -87,7 +87,10 @@ def test_respawn_never_duplicates_marked_loot(s):
 
 def test_status_snapshot_resolves_values_server_side(s):
     s.command(AS+'data modify entity @s data.agent set value {goal:"iron_pickaxe",intent:"mine_iron",state:"running",reason:"gathering"}')
-    s.command(AS+'data modify entity @s data.survival set value {enabled:1b,dead:0b,health:17.0f,food:9}')
+    s.command(AS+'function npcraft:survival/enable')
+    s.command('damage @e[type=minecraft:mannequin,tag=npcraft.body,limit=1] 3 minecraft:generic')
+    s.command(AS+'data modify entity @s data.survival.food set value 9')
+    s.command(AS+'function npcraft:survival/tick with entity @s data')
     s.command(AS+'data modify entity @s data.rival set value {activity:"equipping"}')
     s.command(AS+'function npcraft:ui/status')
     for condition in (
