@@ -11,7 +11,7 @@
    world, not mocks of Minecraft's command implementation. It saves/restarts too.
 4. Manual client/multiplayer playtesting: visual/UI quality and real player flows.
 
-The current offline suite contains 24 tests; the vanilla suite defines 20 cases.
+The current offline suite contains 25 tests; the vanilla suite defines 22 cases.
 Numbers alone are not coverage percentages. CI's current run is the authority on
 pass/fail, not this document. Never call an unexecuted test a passing test.
 
@@ -23,7 +23,8 @@ plot scan and delayed harvest; stale targets; positive/negative-coordinate bound
 missing axe; full and mixed cargo; line-of-sight refusal; full barrel, successful
 empty-slot transfer and no repeat credit; missing barrel; axe breakage; single
 item returns; rejection without an authorized actor; pause without an online owner;
-fair queue rotation; persisted record/UUID/cargo/scores across process restart.
+fair queue rotation; negative-coordinate navigation; dismissal without extra drops or
+serialization warnings; persisted record/UUID/cargo/scores across process restart.
 
 The headless suite does **not** log in a real player. It tests authorization
 rejection, not every successful player UI/authentication path. It tests shared core

@@ -124,6 +124,15 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('unless function npcraft:work/in_bounds',commit)
         self.assertIn('matches 64..',commit)
 
+    def test_navigation_coordinates_and_parent_selection(self):
+        base=self.root/'datapack/data/npcraft/function'
+        for relative in ('nav/goal.mcfunction', 'work/sight.mcfunction'):
+            self.assertIn('$(z) align xyz positioned ~0.5', (base/relative).read_text())
+        search=(base/'nav/search.mcfunction').read_text()
+        self.assertIn('scoreboard players operation #min np.tmp < @e[tag=npcraft.open] np.depth', search)
+        self.assertIn('tag @e[tag=npcraft.frontier,limit=1] add npcraft.current_node', search)
+        self.assertNotIn('unless entity @e[tag=npcraft.current_node]', search)
+
     def test_vanilla_suite_has_behavioral_coverage(self):
         names={test.__name__ for test in TESTS}
         self.assertGreaterEqual(len(names),20)

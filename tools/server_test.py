@@ -165,14 +165,22 @@ class Server:
         answer = self.command("scoreboard players get #assert np.tmp")
         match = re.search(r"has (-?\d+) \[np\.tmp\]", answer)
         if not match or (int(match.group(1)) > 0) != truth:
-            raise AssertionError(f"Expected {condition!r} to be {truth}; response: {answer}")
+            diagnostics = []
+            for query in (f"data get entity {BOT} data", f"data get entity {BOT} Pos",
+                          f"scoreboard players list {BOT}", "scoreboard players list #y",
+                          "scoreboard players list #goal_y", "scoreboard players list #range",
+                          "scoreboard players list #arrived", "scoreboard players list #found",
+                          "scoreboard players list #nodes", "scoreboard players list #visible"):
+                with suppress(Exception):
+                    diagnostics.append(f"{query}: {self.command(query)}")
+            raise AssertionError(f"Expected {condition!r} to be {truth}; response: {answer}\n" + "\n".join(diagnostics))
 
     def assert_clean_logs(self) -> None:
         if self.console:
             self.console.flush()
         text = "\n".join(path.read_text(errors="replace") for path in self.reports.glob("server-*.log"))
         bad = [line for line in text.splitlines() if re.search(
-            r"Failed to load function|Failed to parse|Couldn't load tag|Couldn't parse|Failed to execute function|Failed to instantiate macro|Errors in currently selected data packs|Unknown registry key|Unbound values in registry", line)]
+            r"Failed to load function|Failed to parse|Couldn't load tag|Couldn't parse|Failed to execute function|Failed to instantiate macro|Errors in currently selected data packs|Unknown registry key|Unbound values in registry|Serialization errors", line)]
         if bad:
             raise AssertionError("Minecraft rejected datapack resources:\n" + "\n".join(bad[:30]))
 
@@ -207,13 +215,14 @@ def fixture(server: Server) -> None:
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         try:
-            server.expect("if loaded 0 64 0")
+            server.expect("if loaded -8 64 -8 if loaded -8 64 8 if loaded 16 64 -8 if loaded 16 64 8")
             break
         except AssertionError:
             time.sleep(0.2)
     else:
         raise TimeoutError("Test chunks did not load")
-    for tag in ("npcraft.bot", "npcraft.body", "npcraft.nav"):
+    c("execute as @e[type=minecraft:mannequin,tag=npcraft.body] run function npcraft:bot/retire")
+    for tag in ("npcraft.bot", "npcraft.nav"):
         c(f"kill @e[tag={tag}]")
     c("kill @e[type=minecraft:item]")
     c("fill -8 63 -8 16 63 8 minecraft:stone")
@@ -448,11 +457,46 @@ def test_persistence(s: Server) -> None:
     s.expect("if score #enabled np.sys matches 0")
 
 
+
+def test_negative_navigation(s: Server) -> None:
+    s.command(AS + 'data modify entity @s data.dest set value {x:-6,y:64,z:-1,range:0}')
+    for _ in range(12):
+        s.command(AS + "function npcraft:nav/plan")
+    s.expect(f'if data entity {BOT} {{Pos:[-5.5d,64.0d,-0.5d]}}')
+    s.expect("if entity @e[tag=npcraft.nav]", False)
+
+
+def test_dismiss_conserves_items(s: Server) -> None:
+    s.command(AS + 'data modify entity @s data.cargo set value {id:"minecraft:oak_log",count:11}')
+    s.command('data modify storage npcraft:state queue set value [{id:9001}]')
+    s.command('scoreboard players set #total np.sys 1')
+    s.command(AS + "function npcraft:commands/dismiss with entity @s data")
+    s.expect(f"if entity {BOT}", False)
+    s.expect('if data storage npcraft:state queue[{id:9001}]', False)
+    s.expect("if score #total np.sys matches 0")
+    s.expect('if entity @e[type=minecraft:item,nbt={Item:{id:"minecraft:iron_axe",count:1}}]')
+    s.expect('if entity @e[type=minecraft:item,nbt={Item:{id:"minecraft:oak_log",count:11}}]')
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        try:
+            s.expect("if entity @e[type=minecraft:mannequin,tag=npcraft.retiring]", False)
+            break
+        except AssertionError:
+            time.sleep(0.1)
+    else:
+        raise AssertionError("Retired mannequin did not disappear within five seconds")
+    s.command('execute store result score #items np.tmp run execute if entity @e[type=minecraft:item]')
+    s.expect("if score #items np.tmp matches 2")
+    s.command("save-all flush")
+    s.assert_clean_logs()
+
+
 TESTS = [test_native_body, test_reload, test_wall_detour, test_far_goal, test_gap,
          test_height_and_hazard, test_scan_and_harvest, test_stale_target, test_plot_bounds,
          test_missing_tool, test_full_cargo, test_stack_and_type, test_line_of_sight,
          test_full_barrel_and_transfer, test_missing_barrel, test_axe_break,
-         test_return_items, test_unauthorized_and_offline, test_scheduler, test_persistence]
+         test_return_items, test_unauthorized_and_offline, test_scheduler, test_negative_navigation,
+         test_dismiss_conserves_items, test_persistence]
 
 
 def main() -> int:

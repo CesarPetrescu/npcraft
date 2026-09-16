@@ -1,4 +1,4 @@
-# Operator diagnostic snapshot; temporary navigation tracing during integration debugging.
+# Operator diagnostic snapshot; invoke as a companion marker after reproducing a problem.
 data modify storage npcraft:diagnostics snapshot set value {pos:[],dest:{},nodes:0,found:0,arrived:0,range:0,status:0}
 data modify storage npcraft:diagnostics snapshot.pos set from entity @s Pos
 data modify storage npcraft:diagnostics snapshot.dest set from entity @s data.dest
