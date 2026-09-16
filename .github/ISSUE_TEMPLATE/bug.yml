@@ -1,0 +1,27 @@
+name: Bug report
+description: Report reproducible companion behavior, an item-accounting problem, or a build failure.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: NPCraft version and Minecraft version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the companion mode/status, plot and barrel placement. Use a copy of your world.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected versus actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs and screenshots
+      description: Remove passwords, tokens and private information before posting logs.

@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+.cache/
+dist/
+reports/
+server.jar
+server.properties
+eula.txt
+world/
+logs/
+.env
+.DS_Store
