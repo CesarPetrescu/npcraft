@@ -12,6 +12,8 @@ execute if score #cmd np.tmp matches 13 run function npcraft:commands/status
 execute if score #cmd np.tmp matches 14 run function npcraft:commands/equip
 execute if score #cmd np.tmp matches 15 run function npcraft:commands/drop_tool
 execute if score #cmd np.tmp matches 16 run function npcraft:commands/drop_cargo
+execute if score #cmd np.tmp matches 20..25 run function npcraft:agent/commands
+execute if score #cmd np.tmp matches 4..11 if data entity @s data.agent run function npcraft:agent/invalidate
 execute if score #cmd np.tmp matches 99 run return run function npcraft:commands/dismiss with entity @s data
 # Orders invalidate pending harvests. Revalidation is mandatory after any change.
 data remove entity @s data.target

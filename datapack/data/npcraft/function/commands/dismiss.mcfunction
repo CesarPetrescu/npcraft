@@ -1,5 +1,7 @@
 function npcraft:commands/drop_tool
 function npcraft:commands/drop_cargo
+function npcraft:inventory/drop_all
+execute if data entity @s data.agent.bag[].item run return 0
 execute if data entity @s data.tool run return 0
 execute if data entity @s data.cargo run return 0
 # Retire the cosmetic body only after returning the authoritative items.

@@ -2,3 +2,4 @@ $execute unless entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.i
 $tp @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)}] ~ ~ ~ ~ ~
 $execute if data entity @s data.tool run data modify entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)},limit=1] equipment.mainhand set from entity @s data.tool
 $execute unless data entity @s data.tool run item replace entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)}] weapon.mainhand with minecraft:air
+$execute if score @s np.mode matches 4 if data entity @s data.agent.hand run data modify entity @e[type=minecraft:mannequin,tag=npcraft.body,scores={np.id=$(id)},limit=1] equipment.mainhand set from entity @s data.agent.hand

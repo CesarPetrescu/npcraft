@@ -218,8 +218,9 @@ def resources() -> dict[str, str]:
         execute unless score #visible np.tmp matches 1 run return 0
         return 1
     ''')
+    fn('action/valid', 'return run function npcraft:action/check with entity @s data.agent.target')
     fn('action/mine', '''
-        execute unless function npcraft:action/check with entity @s data.agent.target run return run function npcraft:agent/failed
+        execute unless function npcraft:action/valid run return run function npcraft:agent/failed
         # Whitelist dispatch validates drop/tool rules instead of trusting a supplied drop ID.
         execute if data entity @s data.agent.target{kind:"minecraft:oak_log"} run return run function npcraft:action/log
         execute if data entity @s data.agent.target{kind:"minecraft:stone"} run return run function npcraft:action/stone
@@ -258,7 +259,7 @@ def resources() -> dict[str, str]:
     fn('action/commit', '''
         # Staged inventory is unpublished until removal succeeds; repeat all geometric checks.
         execute unless score #iv_ok np.tmp matches 1 run return 0
-        execute unless function npcraft:action/check with entity @s data.agent.target run return run function npcraft:agent/failed
+        execute unless function npcraft:action/valid run return run function npcraft:agent/failed
         $execute store success score #removed np.tmp run setblock $(x) $(y) $(z) minecraft:air
         execute unless score #removed np.tmp matches 1 run return 0
         function npcraft:inventory/commit

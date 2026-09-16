@@ -4,6 +4,10 @@ scoreboard players operation #nx np.tmp -= #gx np.tmp
 scoreboard players operation #nz np.tmp -= #gz np.tmp
 execute if score #nx np.tmp matches ..-1 run scoreboard players operation #nx np.tmp *= #minus np.tmp
 execute if score #nz np.tmp matches ..-1 run scoreboard players operation #nz np.tmp *= #minus np.tmp
+execute store result score #ny np.tmp run data get entity @s Pos[1]
+scoreboard players operation #ny np.tmp -= #goal_y np.tmp
+execute if score #ny np.tmp matches ..-1 run scoreboard players operation #ny np.tmp *= #minus np.tmp
+scoreboard players operation #nx np.tmp += #ny np.tmp
 scoreboard players operation #nx np.tmp += #nz np.tmp
 execute unless score #nx np.tmp < #best np.tmp run return 0
 scoreboard players operation #best np.tmp = #nx np.tmp
