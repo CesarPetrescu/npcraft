@@ -194,7 +194,8 @@ def run(args):
             check('native_menu_axe_transfer', lambda: server.expect(f'if data entity {BOT} data.tool'))
             check('existing_axe_damage_preserved', lambda: server.expect(f'if data entity {BOT} data.tool.components{{"minecraft:damage":7}}'))
             check('axe_removed_from_player', lambda: server.expect(f'if items entity {PLAYER} weapon.mainhand minecraft:iron_axe', False))
-            c(f'tp {PLAYER} 4.5 64 10.5 facing entity @e[type=minecraft:mannequin,tag=npcraft.body,limit=1] eyes')
+            # Explicit eye-height-aware pitch avoids the feet-origin facing-entity tilt.
+            c(f'tp {PLAYER} 4.5 64 10.5 135 5')
             client.key('F1')
             result['screenshots'].append(client.shot('01-companion-in-world').name)
             client.key('F1')
@@ -222,7 +223,7 @@ def run(args):
                     break
                 time.sleep(0.1)
             c('tick freeze')
-            c(f'execute at {BOT} run tp {PLAYER} ~-3 ~1 ~-4 facing entity @e[type=minecraft:mannequin,tag=npcraft.body,limit=1] eyes')
+            c(f'execute at {BOT} run tp {PLAYER} ~3 ~ ~2 124 8')
             client.key('F1')
             result['screenshots'].append(client.shot('03-timber-worker').name)
             client.key('F1')
@@ -259,7 +260,7 @@ def run(args):
             check('navigation_preserved_wall', lambda: server.expect('if block 8 64 0 minecraft:stone_bricks'))
             client.chat('/trigger npcraft set 5')
             check('stay_through_client', lambda: server.expect(f'if score {BOT} np.mode matches 0'))
-            c(f'tp {PLAYER} 14.5 64 4.5 facing entity @e[type=minecraft:mannequin,tag=npcraft.body,limit=1] eyes')
+            c(f'execute at {BOT} run tp {PLAYER} ~4 ~ ~5 141 5')
             client.key('F1')
             result['screenshots'].append(client.shot('06-follow-obstacle-course').name)
             client.key('F1')
@@ -292,7 +293,9 @@ def run(args):
             other.chat('/trigger npcraft set 2')
             check('second_owner_recruits_separate_companion', lambda: server.expect('if entity @e[tag=npcraft.bot,scores={np.id=2,np.owner=2}]'))
             check('first_owner_record_unchanged', lambda: server.expect('if entity @e[tag=npcraft.bot,scores={np.id=1,np.owner=1}]'))
-            c('tp NPCraftOther 16.5 64 6.5 facing entity @e[tag=npcraft.body,scores={np.id=1},limit=1] eyes')
+            # Move the first camera player away so it cannot hide either companion.
+            c(f'tp {PLAYER} 0.5 64 6.5 180 0')
+            c('tp NPCraftOther 16.5 64 6.5 145 5')
             other.key('F1')
             result['screenshots'].append(other.shot('07-two-owner-companions').name)
             other.key('F1')
