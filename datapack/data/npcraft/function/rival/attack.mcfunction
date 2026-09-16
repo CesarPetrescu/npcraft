@@ -3,9 +3,9 @@ execute unless data entity @s data.rival{enabled:1b,retreat:0b} run return 0
 execute unless function npcraft:rival/access run return 0
 execute unless score @s np.mode matches 6 run return 0
 execute if data entity @s data.survival{dead:1b} run return 0
-execute unless entity @a[tag=npcraft.opponent,distance=..2.8,limit=1] run return 0
 function npcraft:rival/perceive with entity @s data.rival
 execute unless score #seen np.tmp matches 1 run return 0
+execute unless entity @a[tag=npcraft.opponent,distance=..2.8,limit=1] run return 0
 execute store result score #attack_at np.tmp run data get entity @s data.rival.attack_at
 execute if score #now np.sys < #attack_at np.tmp run return 0
 function npcraft:inventory/load

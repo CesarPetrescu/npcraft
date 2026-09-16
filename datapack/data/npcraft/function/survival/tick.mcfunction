@@ -1,6 +1,6 @@
 execute if data entity @s data.survival{dead:1b} run return run function npcraft:survival/dead_tick
 execute unless data entity @s data.survival.body_uuid run function npcraft:survival/remember_body with entity @s data
-execute if data entity @s data.survival.body_uuid run function npcraft:survival/read_health with entity @s data.survival
+execute if data entity @s data.survival.body_uuid run function npcraft:survival/read_health with entity @s data
 execute if data entity @s data.survival{dead:1b} run return 0
 execute unless score #enabled np.sys matches 1 run return 0
 scoreboard players set #survival_at np.tmp 0

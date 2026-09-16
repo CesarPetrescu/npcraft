@@ -60,7 +60,9 @@ jobs:
           java-version: '25'
       - name: Boot vanilla and execute behavioral tests
         # Explicit EULA acceptance is scoped to an isolated, loopback-only test world.
-        run: python tools/server_test.py --accept-eula
+        run: |
+          python tools/server_test.py --accept-eula
+          python tools/v03_adversarial_tests.py --accept-eula --reports reports/adversarial
       - name: Preserve server diagnostics even when a test fails
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
