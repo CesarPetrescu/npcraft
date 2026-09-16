@@ -4,3 +4,4 @@ execute if score #ag_changed np.tmp matches 1 run scoreboard players set @s np.d
 execute if score #ag_changed np.tmp matches 1 run data modify entity @s data.agent.failures set value 0
 execute if score #ag_changed np.tmp matches 1 run data modify entity @s data.scan set value 0
 execute if score #ag_changed np.tmp matches 1 run data modify entity @s data.scanned set value 0
+execute if score #ag_changed np.tmp matches 1 run data remove entity @s data.navigation

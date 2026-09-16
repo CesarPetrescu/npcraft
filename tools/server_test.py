@@ -501,6 +501,8 @@ TESTS = [test_native_body, test_reload, test_wall_detour, test_far_goal, test_ga
 
 from tools.agent_tests import AGENT_TESTS
 TESTS.extend(AGENT_TESTS)
+from tools.v03_tests import V03_TESTS
+TESTS.extend(V03_TESTS)
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)

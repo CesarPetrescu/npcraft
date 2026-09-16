@@ -1,0 +1,88 @@
+{
+  "type": "minecraft:multi_action",
+  "title": "NPCraft | Iron and rival lab",
+  "pause": false,
+  "columns": 2,
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 380,
+      "contents": "Experimental: builds workstations only in your plot. Survival makes this NPC mortal. Rival mode attacks only the consenting player inside the home arena. Food must be supplied."
+    }
+  ],
+  "actions": [
+    {
+      "label": "Goal: iron pickaxe",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 31"
+      }
+    },
+    {
+      "label": "View backpack",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 32"
+      }
+    },
+    {
+      "label": "Give held stack",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 21"
+      }
+    },
+    {
+      "label": "Return backpack",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 22"
+      }
+    },
+    {
+      "label": "Enable mortality",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 35"
+      }
+    },
+    {
+      "label": "Agent status",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 25"
+      }
+    },
+    {
+      "label": "Start rival...",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 40"
+      }
+    },
+    {
+      "label": "End rival / Stop",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 42"
+      }
+    },
+    {
+      "label": "Preview work bounds",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 33"
+      }
+    },
+    {
+      "label": "Live task / health",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 34"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": "Close"
+  }
+}

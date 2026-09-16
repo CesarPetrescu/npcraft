@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:confirmation",
+  "title": "Enable a mortal opponent?",
+  "pause": false,
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 380,
+      "contents": "This NPC can damage and kill YOU in Survival/Adventure, lose its own inventory on death, and respawn without free gear. Arena: home +/-16 blocks horizontally, +/-8 vertically. Other players are not targets. No chunk force-loading. End with trigger npcraft set 42."
+    }
+  ],
+  "yes": {
+    "label": "I consent: start rival",
+    "action": {
+      "type": "run_command",
+      "command": "trigger npcraft set 41"
+    }
+  },
+  "no": {
+    "label": "Cancel"
+  }
+}

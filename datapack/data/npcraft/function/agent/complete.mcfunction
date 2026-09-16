@@ -1,3 +1,4 @@
+data remove entity @s data.navigation
 function npcraft:actions/result {state:"succeeded",reason:"stone_pickaxe_obtained"}
 # Goal remains complete, not a trigger for unbounded resource collection.
 function npcraft:inventory/load

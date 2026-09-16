@@ -1,9 +1,13 @@
 execute unless function npcraft:work/in_bounds run return run function npcraft:actions/invalid_target
 $execute unless block $(x) $(y) $(z) $(kind) run return run function npcraft:actions/invalid_target
-data modify entity @s data.dest set from entity @s data.target
-execute if data entity @s data.agent{intent:"gather_logs"} run data modify entity @s data.dest.y set from entity @s data.plot.y
-data modify entity @s data.dest.range set value 1
-function npcraft:nav/plan
+# Prefer a currently reachable visible target. An elevated block does not require
+# standing at the block's Y; the action boundary still enforces exact ray/reach checks.
+function npcraft:work/sight with entity @s data.target
+scoreboard players set #arrived np.tmp 0
+execute if score #visible np.tmp matches 1 run scoreboard players set #arrived np.tmp 1
+execute if score #arrived np.tmp matches 1 run data remove entity @s data.navigation
+execute unless score #arrived np.tmp matches 1 run function npcraft:actions/approach_resource
+execute if score #arrived np.tmp matches 1 run scoreboard players set @s np.status 0
 execute if score @s np.status matches 4 run return run function npcraft:actions/result {state:"blocked",reason:"unreachable"}
 execute unless score #arrived np.tmp matches 1 run return run function npcraft:actions/result {state:"running",reason:"moving_to_resource"}
 function npcraft:work/sight with entity @s data.target
