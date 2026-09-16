@@ -8,7 +8,7 @@ scoreboards. Do not combine region files from one snapshot with scores/storage
 from another and expect transaction consistency. Stop the server cleanly before
 copying a production world.
 
-Only schema 1 / Java 26.3 is implemented. Test an upgraded game separately; do not
+Only root schema 1 / Java 26.3 is implemented. The new agent module has its own lazy schema 1. Test an upgraded game separately; do not
 merely edit pack.mcmeta to suppress compatibility warnings. A `/reload` retains
 IDs, allocations, items and operator pause state. It clears only transient paths.
 
@@ -17,11 +17,11 @@ IDs, allocations, items and operator pause state. It clears only transient paths
 `npcraft:admin/pause` prevents new player mutations and autonomous work while leaving
 records intact. The menu still opens. `npcraft:admin/revoke` run as a player removes
 approval and pauses that owner's autonomous companions. Re-grant/resume restores
-normal behavior. Normal work also requires the approved owner within 64 blocks.
+normal behavior. Normal work also requires the approved owner within 64 blocks, including autonomous mode.
 
 ## Stuck companions
 
-Read Status. Unsupported floor shapes, trees outside the small plot, walls, altitude
+Read Status. Unsupported floor shapes, trees outside the small plot, walls, larger altitude
 changes, unloaded chunks and far-goal concave obstacles are expected safe stops.
 Provide a flat full-block route, use Stay/Follow again, and remain nearby. The pack
 does not mine a rescue tunnel or silently teleport the bot through a wall.
@@ -33,7 +33,7 @@ a complete task timeline or a promise of autonomous error recovery.
 
 ## Items and permissions
 
-Only the marker's `data.tool` and `data.cargo` are authoritative. Do not extract the
+The marker's `data.tool`, `data.cargo` and `data.agent.bag` are authoritative. Do not extract the
 mannequin's displayed equipment using other plugins/admin commands. Ordinary users
 should use Give/Return controls. Returned/dismissed items are physical world drops,
 not private inventory transfers; nearby players can collect them.
@@ -59,3 +59,18 @@ these is safer than deleting unrelated scores or losing unloaded records.
 Do not call a global destructive cleanup routine on a live world; none is shipped.
 Deleting the pack alone does not remove saved entities. For complete removal with
 unknown/unloaded allocations, restoring the pre-install world backup is safest.
+
+## Autonomous-agent operations (0.2)
+
+Use `/trigger npcraft set 25` to stop and 23 to return the backpack as real world
+drops. Stop first unless replenishment is intended. Full/missing resources produce
+explicit waiting task names; a blocked workbench center must be cleared by an
+authorized human. The NPC never overwrites it. Keep construction outside the plot.
+
+A version upgrade preserves the root schema and all old records. New bags initialize
+lazily, once. Do not run both old and new pack ZIPs together. Unsupported agent
+schema or a bag with the wrong number of cells is rejected, not reset destructively.
+
+Legacy cargo/iron axe and new backpack are separate. Legacy barrels do not drain
+backpacks. A supported stone kit may be returned normally; the furnace remains an
+item until you place it. No hunger/combat/death/smelting system is activated.

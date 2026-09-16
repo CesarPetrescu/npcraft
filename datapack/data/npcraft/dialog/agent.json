@@ -1,0 +1,60 @@
+{
+  "type": "minecraft:multi_action",
+  "title": "NPCraft | Autonomous agent",
+  "pause": false,
+  "columns": 2,
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 360,
+      "contents": "Experimental: gather oak and stone, craft a workbench and stone kit. Uses your assigned 7 x 7 x 4 plot; ALL eligible blocks inside are permitted. Keep its center empty for a workbench. No food, combat or free-world exploration yet."
+    }
+  ],
+  "actions": [
+    {
+      "label": "Build stone kit",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 21"
+      }
+    },
+    {
+      "label": "Stop autonomous work",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 25"
+      }
+    },
+    {
+      "label": "Store held stack",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 22"
+      }
+    },
+    {
+      "label": "Return backpack (drops)",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 23"
+      }
+    },
+    {
+      "label": "Task / inventory status",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 24"
+      }
+    },
+    {
+      "label": "Legacy companion panel",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 1"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": "Close"
+  }
+}

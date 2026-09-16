@@ -1,112 +1,129 @@
 # Architecture
 
 ```text
-G / pause-menu dialog / trigger
-            |
-player init -> approval + Overworld + command-range checks
-            |
-owner ID + stored UUID validation
-            |
-persistent marker controller (authoritative data and scores)
-            |
-fair saved queue: ONE allocated record selected per server tick
-            |
-owner nearby? -> cooldown -> mode dispatcher
-            |
-follow / home / timber -> bounded navigation -> validated action
-            |
-mannequin presentation sync
+Native dialog / trigger request
+  -> approval + dimension + range
+  -> owner ID AND stored player UUID
+  -> persistent marker controller + finite mode
+  -> saved fair queue (one allocated record per tick)
+     -> nearby approved owner + cooldown
+     -> legacy worker OR autonomous dependency planner
+        -> bounded perception / remembered failed targets
+        -> navigation primitives
+        -> validated action + staged inventory transaction
+  -> mannequin presentation sync
 ```
 
-## Persistent data
+## Persistence and separation
 
-Each controller is a `minecraft:marker` tagged `npcraft.bot`. Marker `data` is used
-because arbitrary custom fields on a mannequin are not a reliable persistence
-mechanism. A `minecraft:mannequin` tagged `npcraft.body` shares its `np.id`.
+Root schema 1, `npcraft:state queue`, IDs and legacy records remain unchanged.
+Controllers are `minecraft:marker`, tag `npcraft.bot`; the paired mannequin has
+`npcraft.body` and the same `np.id`. It is invulnerable, not an independently
+simulated player. Only the marker holds authoritative item records.
 
-Marker record:
+Player scores: `np.owner`, `np.sel`, `np.count`, `npcraft` trigger. Controller scores
+include ID, owner, mode, status, next-work tick, cutting deadline and legacy harvest
+count. Mode 0 stay, 1 follow, 2 home, 3 legacy timber, **4 autonomous stone kit**.
+The saved queue rotates one `{id}` per tick, including unloaded allocations, to
+avoid starvation and unsafe reclamation. Never infer deletion from absence.
+
+New lazy module:
 
 ```text
-data.schema      = 1
-data.id          = monotonically allocated companion ID
-data.owner       = monotonically allocated player ID
-data.owner_uuid  = full UUID int array copied from the player
-data.home        = {x, y, z}, integer block coordinates
-data.plot        = optional {x, y, z} center / ground level
-data.storage     = optional {x, y, z} output barrel position
-data.tool        = optional complete iron-axe item stack
-data.cargo       = optional {id, count}, supported plain log only
-data.target      = optional {x, y, z, kind}
-data.dest        = {x, y, z, range}, navigation request
-data.scan        = next index in the 196-cell plot scan
-data.scanned     = cells examined since the last target, saturated at 196
+data.agent.schema = 1
+  bag: 36 cells, either {} or {item: full vanilla item stack, max: native limit}
+  hand: cosmetic copy selected from bag; not another owned item
+  equipped: selected slot index
+  goal: stone_kit
+  task: current task or explicit waiting reason
+  resource: current required raw resource
+  target: optional {x,y,z,kind}
+  station: optional {x,y,z}, must still be an actual reachable workbench
+  scan / scanned: bounded plot search cursor/progress
+  blocked: at most 16 failed targets
+  forget_at: next failed-target-memory expiry
+  failures: consecutive blocked attempts at the selected target
+  crafted / mined: diagnostic counters, not sources of resources
 ```
 
-Players keep `np.owner`, `np.sel`, `np.count` and the `npcraft` trigger. Controllers
-keep `np.id`, `np.owner`, `np.mode`, `np.status`, `np.next`, `np.dig`, `np.harvest`.
-Scores and marker records persist with the world. IDs are never based on “nearest
-player,” never recycled on reload, and never inferred from a display name.
+The 36 slots include nine hotbar-equivalent slots; no separate 9-slot duplication.
+Legacy `data.tool` and `data.cargo` remain independent and are not implicitly moved.
+Public give/return commands distinguish backpack versus legacy storage. Dismissal
+returns all three real stores, retires the cosmetic body, then deletes the record.
 
-`npcraft:state queue` is a list of `{id}` records, including unloaded allocations.
-The scheduler copies the first entry, appends it, removes the original and
-processes that ID only if its controller is loaded. This prevents starvation by a
-fixed selector order and prevents unloaded records from resetting allocation caps.
+## Execution and transactions
 
-`npcraft:meta` stores schema, version and installation state. `np.sys` fake players
-hold counters and the pause flag. Installation is gated by persistent metadata;
-reload does not zero anything. Incompatible schema values fail closed.
+Global scratch storage and temporary scoreboard values are safe only under the
+existing synchronous command-chain contract. One autonomous controller chain runs
+per tick; player requests also complete serially. Never introduce async callbacks,
+scheduled continuations or reentrant inventory operations without changing this.
 
-## Temporary state and execution boundaries
+`inventory/begin` validates module schema and exact bag length, marks staging ready,
+and copies the current bag. `add_staged` merges only identical complete item data
+apart from count, respecting stored/native limits, then fills empty slots.
+`take_staged` consumes recipe ingredients on that copy. A caller publishes the copy
+only after the **entire** operation succeeds. Insufficient capacity/ingredients
+leaves authoritative inventory unchanged, including partial-merge failures.
 
-Scratch storage and `#... np.tmp` scores are deliberately global. Minecraft runs
-each function chain synchronously; only one controller's autonomous work chain is
-entered per tick. Player requests are also processed serially. Do not add scheduled
-callbacks, asynchronous work, nested work dispatch, or uncontrolled parallel
-selection without first replacing the scratch-state contract.
+A held-item transfer obtains full SelectedItem and native max-stack limit, stages
+capacity, removes the source hand only on success, then commits. Ordinary return
+summons a full item stack and clears its source cell only if summon succeeds.
+Existing nondefault components are not replaced by a simplified ID/count pair.
 
-Temporary BFS markers use `npcraft.nav`; they are removed at the end of each plan
-and on load. No long-lived force-loaded pathfinding workspace is used. The direct
-block/world checks operate in the current loaded dimension, supported only in the
-Overworld. Scheduler macro values are server-written IDs, never arbitrary user text.
+These are synchronous logical transactions, not cross-region crash-proof database
+transactions. Power/process failure or mixing partial world backups can break
+persistence consistency. Use whole-world backups and clean server shutdowns.
 
-## Navigation contract
+## Action API and trust boundaries
 
-A breadth-first local search visits at most **128** cardinal cells within a
-six-block radius. Nodes retain the first step from the root, not a whole path.
-The first safe step is revalidated before movement. Targets farther than the local
-radius may use the explored frontier with strictly lower Manhattan distance.
-This is not a globally complete planner; concave obstacles can produce a safe stop.
+Agent action functions are internal implementation, not an arbitrary public command
+API. The public interface is the finite owner-checked trigger table. Operators
+can still edit NBT or call internal functions; protecting against the world owner
+with operator privileges is outside the model.
 
-Each candidate requires loaded chunks, a full supported floor, and clear feet/head
-cells. Only a single height is supported. Navigation contains no block mutations.
-The body teleports between grid cells; smooth interpolation and vertical swept
-collision tests are intentionally not claimed.
+Mining validates loaded Overworld, plot bounds, exact supported block, occupied
+support underneath bodies/players, reach, line of sight, correct usable tool, and
+output capacity. Timed oak gathering permits bare hands; stone requires supported
+wooden/stone pick. Stage output -> revalidate -> remove one block -> credit one
+supported drop -> wear tool once. Another actor removing the block first produces
+no output. No general loot-table/enchantment parity is claimed.
 
-## Timber transaction
+Workbenches are real blocks placed with `keep` at the explicitly permitted empty
+center, from a consumed item. Occupancy/headroom/support/reach are checked. Other
+blocks are never overwritten for convenience. Station-based recipes validate the
+recorded block, distance and line of sight; a missing station is replanned.
 
-Scan at most eight of the 196 plot positions per controller visit. Select only
-ordinary oak/birch logs. Before cutting, validate the target still exists, bounds,
-empty/matching cargo capacity, tool presence, reach and a quarter-block sampled
-line of sight. Cutting takes at least 20 game ticks and can be cancelled by an order.
+## Planner and perception
 
-At commit: revalidate type/bounds/capacity/tool; remove the block without destroy
-loot; only on successful removal credit the one supported log; increment tool
-damage once; remove an exhausted axe; invalidate the pending target. Two workers
-cannot harvest the same now-removed block successfully.
+`tools/generate_agent.py` is the reviewed source for the generated agent runtime.
+It compiles eight recipes and their finite prerequisite calls. All generated files
+are committed; build/CI verifies drift. Python never executes in Minecraft.
 
-This is a synchronous logical transaction, **not a crash-proof database transaction**.
-A process/power failure between world-region and scoreboard/entity saves can still
-cause inconsistent snapshots. Backups and clean server shutdowns remain necessary.
+The planner checks actual inventory each visit in a fixed priority order: usable
+stone pick, stone sword, stone axe, furnace. Missing ingredients recursively select
+one leaf action, with a workbench dependency for 3x3 recipes. This is an intentionally
+small acyclic task planner, not dynamic utility scoring, GOAP or an LLM.
 
-A barrel transfer selects an empty slot, revalidates it, writes the supported cargo,
-checks success, then removes cargo from the record. Existing stacks are not merged
-or overwritten. Dismissal drops real inventory, clears the mannequin's display
-copy, removes the queue entry and only then deletes the controller.
+A job scans at most eight of 196 authorized positions per visit. After three failed
+attempts, it remembers a target and tries another. Memory holds at most 16 entries
+and expires after 400 game ticks so changed terrain can be retried. Missing resources
+and full inventory back off. It does not know resources outside the plot or the
+opponent's location. Loss of supported equipment is detected by later inventory
+checks, not by a new player order.
 
-## Security boundary
+## Navigation
 
-The public API is a finite trigger action table. UI actions send no operator
-commands and no arbitrary function names. Approved users are trusted regarding
-land designation: vanilla command execution does not automatically honor external
-claim plugins. Operators can directly invoke internal functions or alter NBT;
-protecting a world from its own operators is outside the security model.
+The existing BFS still bounds insertion to 128 nodes within a six-block local
+sphere, and carries only the first step of a path. A far goal may choose a strictly
+improving explored frontier; this is not a globally complete route planner.
+
+Each cardinal edge can stay level, rise one full block, or drop one full block.
+Loaded destination, support floor, feet/head clearance and extra transition
+headroom are required. Execution rechecks source/destination, Manhattan adjacency,
+height delta and sweep headroom after planning. The body then moves one grid step.
+This is not continuous player physics or animation, and does not support stairs,
+slabs, gap-jumping, swimming, climbing or arbitrary falls.
+
+Navigation has no terrain mutation permissions. Mining support is also refused
+while a player/companion occupies it. The root goal must be reached at the requested
+Y level; merely standing on top of a mining target is not arrival.

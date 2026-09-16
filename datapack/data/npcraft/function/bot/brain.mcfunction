@@ -5,4 +5,5 @@ scoreboard players add @s np.next 5
 execute if score @s np.mode matches 1 run function npcraft:bot/follow with entity @s data
 execute if score @s np.mode matches 2 run function npcraft:bot/home
 execute if score @s np.mode matches 3 run function npcraft:work/tick
+execute if score @s np.mode matches 4 run function npcraft:agent/tick
 execute at @s run function npcraft:bot/sync with entity @s data

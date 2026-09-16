@@ -142,7 +142,7 @@ class Server:
             try:
                 self.rcon = Rcon(self.port, self.password)
                 response = self.rcon.request("data get storage npcraft:meta version")
-                if "0.1.0-alpha.1" in response:
+                if json.loads((ROOT / "project.json").read_text())["version"] in response:
                     self.assert_clean_logs()
                     return
                 self.rcon.close()
