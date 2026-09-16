@@ -1,0 +1,108 @@
+{
+  "minecraft": "26.3",
+  "source_commit": "52b8716c66176107a26f52fc45aa462b92be3419",
+  "run_id": "35103672464",
+  "success": true,
+  "checks": [
+    {
+      "name": "client_recruited_agent",
+      "passed": true
+    },
+    {
+      "name": "give_stack_removes_player_source",
+      "passed": true
+    },
+    {
+      "name": "backpack_preserves_stack_count",
+      "passed": true
+    },
+    {
+      "name": "backpack_preserves_exact_components",
+      "passed": true
+    },
+    {
+      "name": "backpack_return_preserves_count",
+      "passed": true
+    },
+    {
+      "name": "backpack_return_clears_source",
+      "passed": true
+    },
+    {
+      "name": "real_workbench_assigned",
+      "passed": true
+    },
+    {
+      "name": "goal_request_accepted",
+      "passed": true
+    },
+    {
+      "name": "stone_pickaxe_obtained_autonomously",
+      "passed": true
+    },
+    {
+      "name": "wood_pick_wear_exactly_three",
+      "passed": true
+    },
+    {
+      "name": "recipe_leftovers_exact",
+      "passed": true
+    },
+    {
+      "name": "five_blocks_harvested_total",
+      "passed": true
+    },
+    {
+      "name": "cobblestone_consumed_by_recipe",
+      "passed": true
+    },
+    {
+      "name": "out_of_bounds_log_preserved",
+      "passed": true
+    },
+    {
+      "name": "strongest_crafted_tool_displayed",
+      "passed": true
+    },
+    {
+      "name": "goal_stops_consuming_after_success",
+      "passed": true
+    },
+    {
+      "name": "owner_can_cancel_agent",
+      "passed": true
+    },
+    {
+      "name": "follow_climbs_three_full_block_steps",
+      "passed": true
+    },
+    {
+      "name": "agent_reaches_platform_height",
+      "passed": true
+    },
+    {
+      "name": "navigation_preserved_stair_blocks",
+      "passed": true
+    },
+    {
+      "name": "inventory_survives_reload_with_client",
+      "passed": true
+    }
+  ],
+  "method": "unmodified vanilla GUI, xdotool player requests, RCON fixture/assertions",
+  "screenshots": [
+    "01-agent-controls.png",
+    "02-empty-handed-goal-fixture.png",
+    "03-crafted-stone-pickaxe.png",
+    "04-vertical-follow-platform.png"
+  ],
+  "observed_intents": [
+    "Marker has the following entity data: \"complete\"",
+    "Marker has the following entity data: \"craft_planks\"",
+    "Marker has the following entity data: \"craft_stone_pick\"",
+    "Marker has the following entity data: \"craft_wood_pick\"",
+    "Marker has the following entity data: \"gather_logs\"",
+    "Marker has the following entity data: \"mine_stone\""
+  ],
+  "completed_inventory": "Marker has the following entity data: {slots: [{item: {count: 3, id: \"minecraft:oak_planks\"}, max: 64}, {item: {components: {\"minecraft:damage\": 0}, count: 1, id: \"minecraft:stone_pickaxe\"}, max: 1}, {item: {components: {\"minecraft:damage\": 3}, count: 1, id: \"minecraft:wooden_pickaxe\"}, max: 1}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}], version: 1}"
+}
