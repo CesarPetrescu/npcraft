@@ -1,0 +1,4 @@
+tellraw @a[tag=npcraft.actor] [{"text":"NPCraft #","color":"aqua"},{"score":{"name":"@s","objective":"np.id"}},{"text":" | mode="},{"score":{"name":"@s","objective":"np.mode"}},{"text":" | status="},{"score":{"name":"@s","objective":"np.status"}},{"text":" | harvested="},{"score":{"name":"@s","objective":"np.harvest"}}]
+tellraw @a[tag=npcraft.actor] {"text":"Modes: 0 stay, 1 follow, 2 home, 3 timber. Status: 0 idle/arrived, 1 moving, 2 searching, 3 cutting, 4 blocked, 5 barrel full, 6 need axe, 7 need plot, 8 need barrel, 9 no line of sight. Inspect cargo/tool in the next messages.","color":"gray"}
+execute if data entity @s data.cargo run tellraw @a[tag=npcraft.actor] {"nbt":"data.cargo","entity":"@s"}
+execute if data entity @s data.tool run tellraw @a[tag=npcraft.actor] {"nbt":"data.tool","entity":"@s"}

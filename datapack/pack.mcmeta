@@ -1,0 +1,13 @@
+{
+  "pack": {
+    "description": "NPCraft 0.1.0-alpha.1 | Controlled companions and bounded timber harvesting",
+    "min_format": [
+      121,
+      0
+    ],
+    "max_format": [
+      121,
+      0
+    ]
+  }
+}

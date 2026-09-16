@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:confirmation",
+  "title": "Dismiss selected companion?",
+  "pause": false,
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": "The selected companion is removed permanently. Its real axe and cargo are dropped at its feet. Other players can pick up those drops."
+    }
+  ],
+  "yes": {
+    "label": "Dismiss and drop items",
+    "action": {
+      "type": "run_command",
+      "command": "trigger npcraft set 99"
+    }
+  },
+  "no": {
+    "label": "Cancel"
+  }
+}

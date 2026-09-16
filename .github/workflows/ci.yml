@@ -1,0 +1,83 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Quality (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Validate datapack resources and safety invariants
+        run: python tools/validate.py
+      - name: Unit, mutation and reproducible-build tests
+        run: python -m unittest discover -s tests -v
+      - name: Build installable ZIP and SHA-256
+        run: python tools/build.py
+      - name: Ensure checks do not rewrite tracked sources
+        run: git diff --exit-code
+      - name: Upload installable datapack
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npcraft-datapack
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+  vanilla:
+    name: Vanilla 26.3 integration
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Boot vanilla and execute behavioral tests
+        # Explicit EULA acceptance is scoped to an isolated, loopback-only test world.
+        run: python tools/server_test.py --accept-eula
+      - name: Preserve server diagnostics even when a test fails
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vanilla-diagnostics
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14
+  required:
+    name: Required
+    if: always()
+    needs: [quality, vanilla]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Reject failed, skipped or cancelled prerequisites
+        env:
+          QUALITY: ${{ needs.quality.result }}
+          VANILLA: ${{ needs.vanilla.result }}
+        run: test "$QUALITY" = success && test "$VANILLA" = success

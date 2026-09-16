@@ -1,0 +1,125 @@
+{
+  "type": "minecraft:multi_action",
+  "title": "NPCraft | Companion control",
+  "external_title": "NPCraft",
+  "pause": false,
+  "can_close_with_escape": true,
+  "columns": 2,
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 360,
+      "contents": "Alpha: Overworld, flat ground, oak/birch timber only. Select a companion within 8 blocks; orders require 16 blocks. Operator approval is required. A plot permits ALL oak/birch logs within 3 blocks horizontally and 4 blocks upward; exclude buildings. Returned items drop at the companion."
+    }
+  ],
+  "actions": [
+    {
+      "label": "Recruit companion",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 2"
+      }
+    },
+    {
+      "label": "Select nearest owned",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 3"
+      }
+    },
+    {
+      "label": "Follow me",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 4"
+      }
+    },
+    {
+      "label": "Stay",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 5"
+      }
+    },
+    {
+      "label": "Set home here",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 6"
+      }
+    },
+    {
+      "label": "Return home",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 7"
+      }
+    },
+    {
+      "label": "Set timber plot here",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 8"
+      }
+    },
+    {
+      "label": "Set barrel beneath me",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 9"
+      }
+    },
+    {
+      "label": "Start timber job",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 10"
+      }
+    },
+    {
+      "label": "Stop job",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 11"
+      }
+    },
+    {
+      "label": "Give held iron axe",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 14"
+      }
+    },
+    {
+      "label": "Return axe (drop)",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 15"
+      }
+    },
+    {
+      "label": "Return cargo (drop)",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 16"
+      }
+    },
+    {
+      "label": "Status",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 13"
+      }
+    },
+    {
+      "label": "Dismiss...",
+      "action": {
+        "type": "run_command",
+        "command": "trigger npcraft set 12"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": "Close"
+  }
+}

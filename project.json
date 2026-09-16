@@ -1,0 +1,10 @@
+{
+  "name": "npcraft",
+  "version": "0.1.0-alpha.1",
+  "minecraft": "26.3",
+  "java": 25,
+  "pack_format": [
+    121,
+    0
+  ]
+}
