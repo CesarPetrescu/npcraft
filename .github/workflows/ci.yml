@@ -26,6 +26,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
+      - name: Reject generated runtime drift
+        run: python tools/generate_agent.py --check
       - name: Validate datapack resources and safety invariants
         run: python tools/validate.py
       - name: Unit, mutation and reproducible-build tests
@@ -60,7 +62,10 @@ jobs:
           java-version: '25'
       - name: Boot vanilla and execute behavioral tests
         # Explicit EULA acceptance is scoped to an isolated, loopback-only test world.
-        run: python tools/server_test.py --accept-eula
+        run: python tools/server_test.py --accept-eula --reports reports/legacy
+      - name: Verify inventory, crafting, autonomous goals and vertical movement
+        if: always()
+        run: python tools/agent_test.py --accept-eula --reports reports/agent
       - name: Preserve server diagnostics even when a test fails
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -69,10 +74,16 @@ jobs:
           path: reports/
           if-no-files-found: warn
           retention-days: 14
+  client:
+    name: Graphical acceptance
+    needs: quality
+    uses: ./.github/workflows/client-playtest.yml
+    permissions:
+      contents: read
   required:
     name: Required
     if: always()
-    needs: [quality, vanilla]
+    needs: [quality, vanilla, client]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
@@ -80,4 +91,5 @@ jobs:
         env:
           QUALITY: ${{ needs.quality.result }}
           VANILLA: ${{ needs.vanilla.result }}
-        run: test "$QUALITY" = success && test "$VANILLA" = success
+          CLIENT: ${{ needs.client.result }}
+        run: test "$QUALITY" = success && test "$VANILLA" = success && test "$CLIENT" = success

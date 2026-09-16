@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0-alpha.1 — unreleased
+
+Add a persistent 36-slot full-component backpack with staged transactions; eight
+finite recipes and a real workbench; validated barehand oak / pickaxe stone actions;
+empty-inventory stone-kit dependency planning, retry memory and lost-tool replanning.
+Add conservative one-full-block up/down navigation with transition revalidation.
+Keep legacy tools/cargo, owners, IDs, queue and approval unchanged.
+
+New exact-vanilla acceptance fixtures and actual graphical-client progression tests,
+genuine screenshots, generator drift tests and required graphical CI. Bodies remain
+invulnerable; this is not yet a general survival opponent or combat implementation.
+
+
 ## 0.1.0-alpha.1 — unreleased
 
 Initial original vanilla datapack implementation: mannequin companions; persistent

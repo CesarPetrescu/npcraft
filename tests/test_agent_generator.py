@@ -56,3 +56,24 @@ class AgentGenerationTests(unittest.TestCase):
                 for line in text.splitlines():
                     if '$(' in line:
                         self.assertTrue(line.lstrip().startswith('$'),(path,line))
+
+
+class WorkflowContractTests(unittest.TestCase):
+    def test_required_includes_graphical_and_runtime(self):
+        from tools.generate_agent import ROOT
+        workflow=(ROOT/'.github/workflows/ci.yml').read_text()
+        self.assertIn('needs: [quality, vanilla, client]', workflow)
+        self.assertIn('python tools/generate_agent.py --check', workflow)
+        self.assertIn('python tools/agent_test.py --accept-eula', workflow)
+        self.assertIn('test "$CLIENT" = success', workflow)
+        self.assertIn('uses: ./.github/workflows/client-playtest.yml',workflow)
+
+    def test_graphical_workflow_readonly_and_complete(self):
+        from tools.generate_agent import ROOT
+        workflow=(ROOT/'.github/workflows/client-playtest.yml').read_text()
+        self.assertIn('workflow_call:',workflow)
+        self.assertIn('python tools/client_playtest.py --accept-eula',workflow)
+        self.assertIn('python tools/agent_playtest.py --accept-eula',workflow)
+        self.assertNotIn('contents: write',workflow)
+        self.assertNotIn('pull_request_target',workflow)
+        self.assertNotIn('git push',workflow)
