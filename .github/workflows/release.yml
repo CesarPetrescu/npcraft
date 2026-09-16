@@ -1,14 +1,19 @@
 name: Release
+
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   checks:
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
+
   publish:
     name: Publish verified datapack
     needs: checks
@@ -23,17 +28,84 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - name: Enforce tag/version agreement and build
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: python tools/build.py --expect-tag "$RELEASE_TAG"
-      - name: Create release with ZIP and checksum
+
+      - name: Resolve release metadata and build installable ZIP
+        shell: bash
+        run: |
+          VERSION="$(python -c 'import json; print(json.load(open("project.json"))["version"])')"
+          MINECRAFT="$(python -c 'import json; print(json.load(open("project.json"))["minecraft"])')"
+          TAG="v${VERSION}"
+          ZIP="npcraft-${VERSION}-mc${MINECRAFT}.zip"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.ref }}" != "refs/heads/main" ]]; then
+            echo 'Manual releases must be run from the main branch.' >&2
+            exit 1
+          fi
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" != "$TAG" ]]; then
+            echo "Tag ${{ github.ref_name }} does not match project.json ($TAG)." >&2
+            exit 1
+          fi
+
+          python tools/build.py --expect-tag "$TAG"
+          test -f "dist/$ZIP"
+          test -f "dist/$ZIP.sha256"
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "MINECRAFT=$MINECRAFT" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=$TAG" >> "$GITHUB_ENV"
+          echo "RELEASE_ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: Write user-facing release notes
+        shell: bash
+        run: |
+          cat > release-notes.md <<EOF
+          ## NPCraft ${VERSION}
+
+          Tested NPCraft datapack release for **Minecraft Java Edition ${MINECRAFT}**.
+
+          ### Install
+
+          1. Under **Assets**, download **\`${RELEASE_ZIP}\`**.
+             Do **not** download GitHub's automatic **Source code** archives.
+          2. Put the ZIP directly in:
+             \`\`\`text
+             <your world>/datapacks/
+             \`\`\`
+          3. Open/start the world and run as an operator:
+             \`\`\`mcfunction
+             /reload
+             /datapack list enabled
+             /function npcraft:admin/grant
+             /trigger npcraft set 1
+             \`\`\`
+          4. Press **G** or use \`/trigger npcraft set 1\` to open NPCraft controls.
+
+          Keep the datapack ZIP intact. Use a backed-up/test world for alpha releases.
+          A matching SHA-256 checksum file is attached next to the ZIP.
+          EOF
+
+      - name: Create GitHub Release and attach ZIP + checksum
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
         run: |
-          args=()
-          if [[ "$RELEASE_TAG" == *-* ]]; then args+=(--prerelease); fi
-          gh release create "$RELEASE_TAG" dist/*.zip dist/*.sha256 \
-            --verify-tag --generate-notes --title "NPCraft $RELEASE_TAG" "${args[@]}"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+          args=(--title "NPCraft ${VERSION}" --notes-file release-notes.md)
+          if [[ "$VERSION" == *-* ]]; then args+=(--prerelease); fi
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            args+=(--verify-tag)
+          else
+            # One-click path: Run workflow on main. GitHub creates the matching tag.
+            args+=(--target "${{ github.sha }}")
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            "dist/$RELEASE_ZIP" \
+            "dist/$RELEASE_ZIP.sha256" \
+            "${args[@]}"
