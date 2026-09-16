@@ -33,11 +33,19 @@ jobs:
           GALLIUM_DRIVER: llvmpipe
           ALSOFT_DRIVERS: 'null'
         run: xvfb-run -a -s '-screen 0 1280x720x24 -ac +extension GLX +render -noreset' python tools/client_playtest.py --accept-eula
+      - name: Exercise agent goals, backpack transfers and vertical movement
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GALLIUM_DRIVER: llvmpipe
+          ALSOFT_DRIVERS: 'null'
+        run: xvfb-run -a -s '-screen 0 1280x720x24 -ac +extension GLX +render -noreset' python tools/agent_playtest.py --accept-eula
       - name: Publish screenshots, client/server logs and assertions
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: minecraft-client-playtest
-          path: reports/visual/
+          path: |
+            reports/visual/
+            reports/agent-visual/
           if-no-files-found: warn
           retention-days: 14
